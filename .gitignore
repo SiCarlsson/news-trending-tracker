@@ -1,4 +1,7 @@
-# Python virtual environment
+# APIs and Keys
+bigquery_scraper_service_account.json
+
+ Python virtual environment
 venv/
 
 # Testing files and directories
