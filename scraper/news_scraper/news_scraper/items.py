@@ -7,5 +7,6 @@ import scrapy
 
 
 class NewsScraperItem(scrapy.Item):
-    title = scrapy.Field()
+    word = scrapy.Field()
     url = scrapy.Field()
+    site_name = scrapy.Field()
