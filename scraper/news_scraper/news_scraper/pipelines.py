@@ -37,7 +37,10 @@ class BigQueryPipeline:
         """
 
         if isinstance(item, WebsiteItem):
-            self.insert_to_bigquery("websites", item, spider)
+            website_url = ItemAdapter(item).asdict()["website_url"]
+            if not self.website_exists_in_bigquery(website_url, spider):
+                self.insert_to_bigquery("websites", item, spider)
+                
         elif isinstance(item, ArticleItem):
             self.insert_to_bigquery("articles", item, spider)
         elif isinstance(item, WordItem):
@@ -46,6 +49,35 @@ class BigQueryPipeline:
             self.insert_to_bigquery("occurrences", item, spider)
 
         return item
+
+    def website_exists_in_bigquery(self, website_url):
+        """
+        Checks if a website already exists in the BigQuery 'websites' table.
+
+        Args:
+            website_url (str): The URL of the website to check.
+
+        Returns:
+            bool: True if the website exists, False otherwise.
+        """
+        query = f"""
+            SELECT website_url
+            FROM `{self.client.project}.{self.dataset_id}.websites`
+            WHERE website_url = @website_url
+        """
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("website_url", "STRING", website_url)
+            ]
+        )
+
+        query_job = self.client.query(query, job_config=job_config)
+        result = query_job.result()
+
+        if result.total_rows > 0:
+            return True
+        else:
+            return False
 
     def insert_to_bigquery(self, table_id, item, spider):
         """
