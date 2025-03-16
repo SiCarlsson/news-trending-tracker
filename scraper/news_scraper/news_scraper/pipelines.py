@@ -2,8 +2,6 @@ import os
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
-
-# useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
 
@@ -47,9 +45,12 @@ class BigQueryPipeline:
             article_url = ItemAdapter(item).asdict()["article_url"]
             if not self.article_exists_in_bigquery(article_url):
                 self.insert_to_bigquery("articles", item, spider)
-                
+
         elif isinstance(item, WordItem):
-            self.insert_to_bigquery("words", item, spider)
+            word_text = ItemAdapter(item).asdict()["word_text"]
+            if not self.word_exists_in_bigquery(word_text):
+                self.insert_to_bigquery("words", item, spider)
+
         elif isinstance(item, OccurrenceItem):
             self.insert_to_bigquery("occurrences", item, spider)
 
@@ -87,6 +88,7 @@ class BigQueryPipeline:
     def article_exists_in_bigquery(self, article_url):
         """
         Checks if an article already exists in the BigQuery 'articles' table.
+
         Args:
             article_url (str): The URL of the article to check.
         Returns:
@@ -99,7 +101,35 @@ class BigQueryPipeline:
         """
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter("araticle_url", "STRING", article_url)
+                bigquery.ScalarQueryParameter("article_url", "STRING", article_url)
+            ]
+        )
+
+        query_job = self.client.query(query, job_config)
+        result = query_job.result()
+
+        if result.total_rows > 0:
+            return True
+        else:
+            return False
+
+    def word_exists_in_bigquery(self, word_text):
+        """
+        Checks if a word already exists in the BigQuery 'words' table.
+
+        Args:
+            word_text (str): The word to check.
+        Returns:
+            bool: True if the word exists, False otherwise.
+        """
+        query = f"""
+            SELECT word_text
+            FROM `{self.client.project}.{self.dataset_id}.words`
+            WHERE word_text = @word_text
+        """
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("word_text", "STRING", word_text)
             ]
         )
 
