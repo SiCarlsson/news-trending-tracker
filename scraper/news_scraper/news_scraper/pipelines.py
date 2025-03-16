@@ -36,13 +36,18 @@ class BigQueryPipeline:
             spider (scrapy.Spider): The active Scrapy spider.
         """
 
+        spider.logger.debug(f"Processing item of type: {type(item).__name__}")
+
         if isinstance(item, WebsiteItem):
             website_url = ItemAdapter(item).asdict()["website_url"]
-            if not self.website_exists_in_bigquery(website_url, spider):
+            if not self.website_exists_in_bigquery(website_url):
                 self.insert_to_bigquery("websites", item, spider)
-                
+
         elif isinstance(item, ArticleItem):
-            self.insert_to_bigquery("articles", item, spider)
+            article_url = ItemAdapter(item).asdict()["article_url"]
+            if not self.article_exists_in_bigquery(article_url):
+                self.insert_to_bigquery("articles", item, spider)
+                
         elif isinstance(item, WordItem):
             self.insert_to_bigquery("words", item, spider)
         elif isinstance(item, OccurrenceItem):
@@ -71,7 +76,34 @@ class BigQueryPipeline:
             ]
         )
 
-        query_job = self.client.query(query, job_config=job_config)
+        query_job = self.client.query(query, job_config)
+        result = query_job.result()
+
+        if result.total_rows > 0:
+            return True
+        else:
+            return False
+
+    def article_exists_in_bigquery(self, article_url):
+        """
+        Checks if an article already exists in the BigQuery 'articles' table.
+        Args:
+            article_url (str): The URL of the article to check.
+        Returns:
+            bool: True if the article exists, False otherwise.
+        """
+        query = f"""
+            SELECT article_url
+            FROM `{self.client.project}.{self.dataset_id}.articles`
+            WHERE article_url = @article_url
+        """
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("araticle_url", "STRING", article_url)
+            ]
+        )
+
+        query_job = self.client.query(query, job_config)
         result = query_job.result()
 
         if result.total_rows > 0:
