@@ -22,3 +22,9 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
    ```bash
    git clone https://github.com/yourusername/news-trending-tracker.git  
    cd news-trending-tracker
+
+2. **Set Up Google Cloud**
+- Create a **Google Cloud** project and enable **BigQuery API**.  
+- Generate a **Service Account Key** with **BigQuery Data Editor** and **BigQuery Job User** roles.  
+- Download the key file and place it in the project directory.  
+- Update the `__init__` method in the `BigQueryPipeline` class within the `Pipelines.py` file to reference the key.
