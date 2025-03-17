@@ -52,7 +52,9 @@ class BigQueryPipeline:
                 self.insert_to_bigquery("words", item, spider)
 
         elif isinstance(item, OccurrenceItem):
-            self.insert_to_bigquery("occurrences", item, spider)
+            occurrence_item = ItemAdapter(item).asdict()
+            if not self.occurrence_exists_in_bigquery(occurrence_item):
+                self.insert_to_bigquery("occurrences", item, spider)
 
         return item
 
@@ -91,6 +93,7 @@ class BigQueryPipeline:
 
         Args:
             article_url (str): The URL of the article to check.
+
         Returns:
             bool: True if the article exists, False otherwise.
         """
@@ -119,6 +122,7 @@ class BigQueryPipeline:
 
         Args:
             word_text (str): The word to check.
+
         Returns:
             bool: True if the word exists, False otherwise.
         """
@@ -130,6 +134,46 @@ class BigQueryPipeline:
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
                 bigquery.ScalarQueryParameter("word_text", "STRING", word_text)
+            ]
+        )
+
+        query_job = self.client.query(query, job_config)
+        result = query_job.result()
+
+        if result.total_rows > 0:
+            return True
+        else:
+            return False
+
+    def occurrence_exists_in_bigquery(self, occurrence_item):
+        """
+        Checks if an occurrence already exists in the BigQuery 'occurrences' table.
+
+        Args:
+            occurrence_item (dict): The occurrence to check.
+
+        Returns:
+            bool: True if the occurrence exists, False otherwise.
+        """
+        query = f"""
+            SELECT occurrence_id
+            FROM `{self.client.project}.{self.dataset_id}.occurrences`
+            WHERE word_id = @word_id
+            AND website_id = @website_id
+            AND article_id = @article_id
+        """
+
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter(
+                    "word_id", "STRING", occurrence_item["word_id"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "website_id", "STRING", occurrence_item["website_id"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "article_id", "STRING", occurrence_item["article_id"]
+                )
             ]
         )
 
