@@ -43,7 +43,7 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 | article_id    | STRING | REQUIRED | Unique identifier for each article. 
 | website_id    | STRING | REQUIRED | Foreign key referencing websites.website_id. 
 | article_title | STRING | REQUIRED | The title of the article. 
-| article_url   | STRING | REQUIRED | The URL of the article. (e.g., '/nyheter/')
+| article_url   | STRING | REQUIRED | The URL of the article. (e.g., '/nyheter/ekonomi/sparare-ratar-usa-fonder-valjer-svenskt')
 
 #### Words Table
 | Field Name  | Type   | Mode     | Description |
