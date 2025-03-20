@@ -28,9 +28,10 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 - Create a **Google Cloud** project and enable **BigQuery API**.  
 - Generate a **Service Account Key** with **BigQuery Data Editor** and **BigQuery Job User** roles.  
 - Download the key file and place it in the project directory.  
-- Update the `__init__` method in the `BigQueryPipeline` class within the `Pipelines.py` file to reference the key.
-- Create a **BigQuery dataset** named `scraper_data` with the following tables:
+- Update the `BigQuery variables` in `Settings.py` file to suit your project.
+- BigQuery Dataset and Tables are automatically created whn running the program.
 
+## 📚 Appendix: Database Tables
 #### Websites Table
 | Field Name   | Type   | Mode     | Description |
 |--------------|--------|----------|-------------|
