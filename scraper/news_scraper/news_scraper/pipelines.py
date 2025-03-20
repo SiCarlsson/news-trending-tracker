@@ -15,15 +15,15 @@ class BigQueryPipeline:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             settings.get('BIGQUERY_CREDENTIALS_PATH')
         )
-        project_id = settings.get('BIGQUERY_PROJECT_ID')
-        dataset_id = settings.get('BIGQUERY_DATASET_ID')
 
         # Load credentials and create the BigQuery client
         credentials = service_account.Credentials.from_service_account_file(
             credentials_path
         )
+        project_id = credentials.project_id
+
         self.client = bigquery.Client(credentials=credentials, project=project_id)
-        self.dataset_id = dataset_id
+        self.dataset_id = settings.get('BIGQUERY_DATASET_ID')
 
     def process_item(self, item, spider):
         """

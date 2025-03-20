@@ -40,11 +40,11 @@ class BigQuerySetupExtension:
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             settings.get("BIGQUERY_CREDENTIALS_PATH"),
         )
-        project_id = settings.get("BIGQUERY_PROJECT_ID")
-        dataset_id = settings.get("BIGQUERY_DATASET_ID")
         credentials = service_account.Credentials.from_service_account_file(
             credentials_path
         )
+        project_id = credentials.project_id
+        dataset_id = settings.get("BIGQUERY_DATASET_ID")
         client = bigquery.Client(credentials=credentials, project=project_id)
 
         logger.info("Starting BigQuery setup...")
