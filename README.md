@@ -11,10 +11,11 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 - Visualizes trends with **Looker**  
 
 ## 🛠️ Tech Stack  
-- **Scraping:** Python (Scrapy, BeautifulSoup)  
-- **Data Pipeline:** Kafka, Apache Spark  
-- **Storage:** Google BigQuery  
-- **Backend API:** Java + Spring Boot  
+- **Scraping:** Python (Scrapy)  
+- **Data Pipeline:** Kafka / Apache Spark  
+- **Database:** Google BigQuery  
+- **Backend API:** Java + Spring Boot
+- **Frontend:** React, Typescript, TailwindCSS
 - **Visualization:** Looker  
 
 ## 🔧 Setup  

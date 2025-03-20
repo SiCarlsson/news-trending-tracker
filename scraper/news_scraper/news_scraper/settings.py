@@ -7,15 +7,23 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'news_scraper'
+import os
 
-SPIDER_MODULES = ['news_scraper.spiders']
-NEWSPIDER_MODULE = 'news_scraper.spiders'
+BOT_NAME = "news_scraper"
 
-### ONLY FOR TESTING ###
-# Output data in JSON format
-FEED_FORMAT = "json"
-FEED_URI = "output/output.json"
+SPIDER_MODULES = ["news_scraper.spiders"]
+NEWSPIDER_MODULE = "news_scraper.spiders"
+
+# BigQuery settings
+BIGQUERY_CREDENTIALS_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "..",
+    "..",
+    "credentials",
+    "bigquery_scraper_service-account.json",
+)
+BIGQUERY_PROJECT_ID = "news-trending-tracker"
+BIGQUERY_DATASET_ID = "scraper_data"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'news_scraper (+http://www.yourdomain.com)'
@@ -69,7 +77,7 @@ FEED_EXPORT_ENCODING = "utf-8"
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'news_scraper.pipelines.BigQueryPipeline': 300,
+    "news_scraper.pipelines.BigQueryPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
