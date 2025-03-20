@@ -2,21 +2,23 @@ import os
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
+from scrapy.utils.project import get_project_settings
 from itemadapter import ItemAdapter
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
 
 
 class BigQueryPipeline:
     def __init__(self):
+        settings = get_project_settings()
+        
+        # Get paths relative to the project root
         credentials_path = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "..",
-            "credentials",
-            "bigquery_scraper_service-account.json",
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            settings.get('BIGQUERY_CREDENTIALS_PATH')
         )
-        project_id = "news-trending-tracker"
-        dataset_id = "scraper_data"
+        
+        project_id = settings.get('BIGQUERY_PROJECT_ID')
+        dataset_id = settings.get('BIGQUERY_DATASET_ID')
 
         # Load credentials and create the BigQuery client
         credentials = service_account.Credentials.from_service_account_file(
