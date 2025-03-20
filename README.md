@@ -21,7 +21,7 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 ## 🔧 Setup  
 1. **Clone the repository**  
    ```bash
-   git clone https://github.com/yourusername/news-trending-tracker.git  
+   git clone https://github.com/SiCarlsson/news-trending-tracker.git  
    cd news-trending-tracker
 
 2. **Set Up Google Cloud**
