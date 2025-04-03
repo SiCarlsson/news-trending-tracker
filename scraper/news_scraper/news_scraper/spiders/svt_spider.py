@@ -11,15 +11,14 @@ class SVTSpider(scrapy.Spider):
     allowed_domains = ["svt.se"]
     start_urls = [
         "https://www.svt.se/nyheter/ekonomi/",
-        # 'https://www.svt.se/nyheter/svtforum/',
-        # 'https://www.svt.se/nyheter/granskning/',
-        # 'https://www.svt.se/nyheter/inrikes/',
-        # 'https://www.svt.se/kultur/',
-        # 'https://www.svt.se/nyheter/utrikes/'
+        "https://www.svt.se/nyheter/svtforum/",
+        "https://www.svt.se/nyheter/granskning/",
+        "https://www.svt.se/nyheter/inrikes/",
+        "https://www.svt.se/kultur/",
+        "https://www.svt.se/nyheter/utrikes/",
     ]
 
-    # Store known words to avoid duplicates
-    word_cache = {}
+    word_cache = {}  # Store known words to avoid duplicates
 
     def __init__(self, *args, **kwargs):
         super(SVTSpider, self).__init__(*args, **kwargs)
@@ -51,6 +50,8 @@ class SVTSpider(scrapy.Spider):
         # Fetch all articles on current page
         articles = response.xpath('//*[@id="innehall"]/div/section/ul//li')
 
+        print("Total articles: " + str(len(articles)))
+
         for article in articles:
             article_id = str(uuid.uuid4())
             article_title = article.xpath(".//article/a/@title").get()
@@ -67,7 +68,7 @@ class SVTSpider(scrapy.Spider):
             for word in words:
                 word_lower = word.lower()
 
-                if (word_lower not in self.word_cache):
+                if word_lower not in self.word_cache:
                     word_id = str(uuid.uuid4())
                     self.word_cache[word_lower] = word_id
 
@@ -82,20 +83,20 @@ class SVTSpider(scrapy.Spider):
                 occurrence_timestamp = datetime.now().isoformat()
 
                 occurrence_item = OccurrenceItem()
-                occurrence_item['occurrence_id'] = occurrence_id
-                occurrence_item['word_id'] = word_id
-                occurrence_item['website_id'] = self.website_id
+                occurrence_item["occurrence_id"] = occurrence_id
+                occurrence_item["word_id"] = word_id
+                occurrence_item["website_id"] = self.website_id
                 occurrence_item["article_id"] = article_id
-                occurrence_item['timestamp'] = occurrence_timestamp
+                occurrence_item["timestamp"] = occurrence_timestamp
                 yield occurrence_item
 
     def tokenize_title(self, title):
         """
         Tokenizes a title by cleaning and splitting it into words. Filters out special characters and blank words.
-        
+
         Args:
             title (str): The title to tokenize.
-        
+
         Returns:
             list: A list of words (tokens).
         """
