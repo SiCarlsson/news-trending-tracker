@@ -24,6 +24,7 @@ BIGQUERY_CREDENTIALS_PATH = os.path.join(
 )
 BIGQUERY_PROJECT_ID = "news-trending-tracker"
 BIGQUERY_DATASET_ID = "scraper_data"
+SQLITE_DATABASE_PATH = "data/cache.db"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'news_scraper (+http://www.yourdomain.com)'
@@ -71,7 +72,8 @@ FEED_EXPORT_ENCODING = "utf-8"
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
 EXTENSIONS = {
-    "news_scraper.extensions.BigQuerySetupExtension": 100,
+    "news_scraper.extensions.SQLiteSetupExtension": 200,
+    "news_scraper.extensions.BigQuerySetupExtension": 300,
 }
 
 # Configure item pipelines

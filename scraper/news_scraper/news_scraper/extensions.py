@@ -1,5 +1,6 @@
 import os
 import logging
+import sqlite3
 
 from scrapy import signals
 from google.cloud import bigquery
@@ -7,6 +8,51 @@ from google.oauth2 import service_account
 from scrapy.utils.project import get_project_settings
 
 logger = logging.getLogger(__name__)
+
+
+class SQLiteSetupExtension:
+    def __init__(self):
+        self._setup_completed = False
+        self.conn = None
+        self.cursor = None
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        ext = cls()
+        crawler.signals.connect(ext.engine_start, signal=signals.engine_started)
+        crawler.signals.connect(ext.spider_closed, signal=signals.spider_closed)
+        return ext
+
+    def engine_start(self):
+        if self._setup_completed:
+            logger.info("SQLite setup has already been completed. Skipping setup.")
+            return
+
+        settings = get_project_settings()
+        db_path = settings.get("SQLITE_DATABASE_PATH")
+
+        try:
+            os.makedirs(os.path.dirname(db_path), exist_ok=False)
+        except OSError:
+            return  # Database already exists
+
+        logger.info(f"Starting SQLite setup with database at: {db_path}")
+        self.conn = sqlite3.connect(db_path)
+        self.cursor = self.conn.cursor()
+
+        # Ensure tables exist
+        self._ensure_tables_exist()
+
+        self._setup_completed = True
+
+    def _ensure_tables_exist(self):
+        # Implement table creation logic here, if necessary
+        pass
+
+    def spider_closed(self, spider):
+        if self.conn:
+            self.conn.close()
+
 
 class BigQuerySetupExtension:
     """
@@ -29,9 +75,7 @@ class BigQuerySetupExtension:
         """
 
         if self._setup_completed:
-            logger.info(
-                "BigQuery setup has already been completed. Skipping setup."
-            )
+            logger.info("BigQuery setup has already been completed. Skipping setup.")
             return
 
         settings = get_project_settings()
@@ -59,9 +103,7 @@ class BigQuerySetupExtension:
         dataset_ref = client.dataset(dataset_id)
         try:
             client.get_dataset(dataset_ref)
-            logger.info(
-                f"Dataset '{dataset_id}' already exists. Skipping creation."
-            )
+            logger.info(f"Dataset '{dataset_id}' already exists. Skipping creation.")
 
         except Exception:
             dataset = bigquery.Dataset(dataset_ref)
@@ -101,9 +143,7 @@ class BigQuerySetupExtension:
             table_ref = client.dataset(dataset_id).table(table_id)
             try:
                 client.get_table(table_ref)
-                logger.info(
-                    f"Table '{table_id}' already exists. Skipping creation."
-                )
+                logger.info(f"Table '{table_id}' already exists. Skipping creation.")
 
             except Exception:
                 table = bigquery.Table(table_ref, schema=schema)
