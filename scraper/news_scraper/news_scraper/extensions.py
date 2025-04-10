@@ -31,23 +31,76 @@ class SQLiteSetupExtension:
         settings = get_project_settings()
         db_path = settings.get("SQLITE_DATABASE_PATH")
 
-        try:
-            os.makedirs(os.path.dirname(db_path), exist_ok=False)
-        except OSError:
-            return  # Database already exists
+        os.makedirs(os.path.dirname(db_path), exist_ok=True) # create data folder
+        db_exists = os.path.isfile(db_path)
+
+        if db_exists:
+            self._setup_completed = True
+            logger.info("SQLite instance is already present. Skipping setup.")
+            return
 
         logger.info(f"Starting SQLite setup with database at: {db_path}")
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
 
-        # Ensure tables exist
         self._ensure_tables_exist()
 
         self._setup_completed = True
 
+
     def _ensure_tables_exist(self):
-        # Implement table creation logic here, if necessary
-        pass
+        logger.info("Creating SQLite tables...")
+
+        self.cursor.execute(
+            """
+        CREATE TABLE IF NOT EXISTS websites (
+            website_id TEXT PRIMARY KEY,
+            website_name TEXT NOT NULL,
+            website_url TEXT NOT NULL
+        )
+        """
+        )
+
+        self.cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS articles (
+            article_id TEXT PRIMARY KEY,
+            website_id TEXT NOT NULL,
+            article_title TEXT NOT NULL,
+            article_url TEXT NOT NULL,
+            FOREIGN KEY (website_id) REFERENCES websites (website_id)
+        )
+        """
+        )
+
+        self.cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS words (
+            word_id TEXT PRIMARY KEY,
+            word_text TEXT NOT NULL
+        )
+        """
+        )
+
+        self.cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS occurrences (
+            occurrence_id TEXT PRIMARY KEY,
+            word_id TEXT NOT NULL,
+            website_id TEXT NOT NULL,
+            article_id TEXT NOT NULL,
+            timestamp TIMESTAMP NOT NULL,
+            FOREIGN KEY (word_id) REFERENCES words (word_id),
+            FOREIGN KEY (website_id) REFERENCES websites (website_id),
+            FOREIGN KEY (article_id) REFERENCES articles (article_id)
+        )
+        """
+        )
+
+        # Commit the changes
+        self.conn.commit()
+
+        logger.info("SQLite tables created successfully.")
 
     def spider_closed(self, spider):
         if self.conn:
