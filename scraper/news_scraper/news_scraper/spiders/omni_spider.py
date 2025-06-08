@@ -1,4 +1,5 @@
 import scrapy
+import uuid
 
 
 class OmniSpider(scrapy.Spider):
@@ -12,7 +13,33 @@ class OmniSpider(scrapy.Spider):
         self.website_name = "Omni"
         self.website_url = "https://omni.se"
 
+        self.ad_words = ["annons"]
+        self.promotion_words = ["erbjudande", "omni mer"]
+
     def parse(self, response):
-        headlines = response.xpath(
-            "/html/body/main/div/div[2]/div/div[1]/div[1]/div/div//article/div/a/div/div[1]/h2//text()"
-        ).getall()
+
+        articles = response.xpath(
+            "/html/body/main/div/div[2]/div/div[1]/div[1]/div/div"
+        )
+
+        for article in articles:
+            article_id = str(uuid.uuid4())
+
+            ad = article.xpath(".//div/div[1]/div/a/span[3]/text()").get()
+            if ad and  ad.lower() in self.ad_words:
+                continue
+
+            omni_promotion = article.xpath(".//div/div[1]/div[1]/text()").get()
+            if omni_promotion and omni_promotion.lower() in self.promotion_words:
+                continue
+
+            article_title = article.xpath(
+                ".//div/div[2]/article/div/a/div/div[1]/h2/text()"
+            ).get()
+            article_url = article.xpath(".//div/div[2]/article/div/a/@href").get()
+
+            print()
+            print("--- ARTICLE ---")
+            print("ARTICLE TITLE:", article_title)
+            print("ARTICLE URL:", article_url)
+            print("ARTICLE AD:", ad)
