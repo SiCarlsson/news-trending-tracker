@@ -1,6 +1,5 @@
 import os
 import logging
-import sqlite3
 
 from scrapy import signals
 from google.cloud import bigquery
@@ -8,100 +7,6 @@ from google.oauth2 import service_account
 from scrapy.utils.project import get_project_settings
 
 logger = logging.getLogger(__name__)
-
-
-class SQLiteSetupExtension:
-    def __init__(self):
-        self._setup_completed = False
-        self.conn = None
-        self.cursor = None
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        ext = cls()
-        crawler.signals.connect(ext.engine_start, signal=signals.engine_started)
-        crawler.signals.connect(ext.spider_closed, signal=signals.spider_closed)
-        return ext
-
-    def engine_start(self):
-        """
-        When the Scrapy engine starts, set up SQLite infrastructure. Only actuates once per startup even though more spiders are called upon.
-        """
-        settings = get_project_settings()
-        self.db_path = settings.get("SQLITE_DATABASE_PATH")
-
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        db_exists = os.path.isfile(self.db_path)
-
-        self.conn = sqlite3.connect(self.db_path)
-        self.cursor = self.conn.cursor()
-
-        if not db_exists:
-            logger.info(f"Creating new SQLite database at {self.db_path}")
-            self._ensure_tables_exist()
-            logger.info("SQLite tables created successfully.")
-        else:
-            logger.info("SQLite database already exists. Skipping table creation.")
-
-        self._setup_completed = True
-
-    def _ensure_tables_exist(self):
-        logger.info("Creating SQLite tables...")
-
-        self.cursor.execute(
-            """
-        CREATE TABLE IF NOT EXISTS websites (
-            website_id TEXT PRIMARY KEY,
-            website_name TEXT NOT NULL,
-            website_url TEXT NOT NULL
-        )
-        """
-        )
-
-        self.cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS articles (
-            article_id TEXT PRIMARY KEY,
-            website_id TEXT NOT NULL,
-            article_title TEXT NOT NULL,
-            article_url TEXT NOT NULL,
-            FOREIGN KEY (website_id) REFERENCES websites (website_id)
-        )
-        """
-        )
-
-        self.cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS words (
-            word_id TEXT PRIMARY KEY,
-            word_text TEXT NOT NULL
-        )
-        """
-        )
-
-        self.cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS occurrences (
-            occurrence_id TEXT PRIMARY KEY,
-            word_id TEXT NOT NULL,
-            website_id TEXT NOT NULL,
-            article_id TEXT NOT NULL,
-            timestamp TIMESTAMP NOT NULL,
-            FOREIGN KEY (word_id) REFERENCES words (word_id),
-            FOREIGN KEY (website_id) REFERENCES websites (website_id),
-            FOREIGN KEY (article_id) REFERENCES articles (article_id)
-        )
-        """
-        )
-
-        self.conn.commit()
-        logger.info("SQLite tables created successfully.")
-
-    def spider_closed(self, spider):
-        if self.conn:
-            self.conn.close()
-
-
 class BigQuerySetupExtension:
     """
     Extension to initialize BigQuery dataset and tables before all spiders start.
@@ -160,7 +65,6 @@ class BigQuerySetupExtension:
             logger.info(f"Dataset '{dataset_id}' created successfully.")
 
     def _ensure_tables_exist(self, client, dataset_id):
-        # Define table schemas
         tables = {
             "websites": [
                 bigquery.SchemaField("website_id", "STRING", mode="REQUIRED"),
@@ -186,7 +90,6 @@ class BigQuerySetupExtension:
             ],
         }
 
-        # Create each table
         for table_id, schema in tables.items():
             table_ref = client.dataset(dataset_id).table(table_id)
             try:
