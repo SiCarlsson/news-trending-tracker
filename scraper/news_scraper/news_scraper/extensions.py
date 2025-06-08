@@ -24,29 +24,26 @@ class SQLiteSetupExtension:
         return ext
 
     def engine_start(self):
-        if self._setup_completed:
-            logger.info("SQLite setup has already been completed. Skipping setup.")
-            return
-
+        """
+        When the Scrapy engine starts, set up SQLite infrastructure. Only actuates once per startup even though more spiders are called upon.
+        """
         settings = get_project_settings()
-        db_path = settings.get("SQLITE_DATABASE_PATH")
+        self.db_path = settings.get("SQLITE_DATABASE_PATH")
 
-        os.makedirs(os.path.dirname(db_path), exist_ok=True) # create data folder
-        db_exists = os.path.isfile(db_path)
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        db_exists = os.path.isfile(self.db_path)
 
-        if db_exists:
-            self._setup_completed = True
-            logger.info("SQLite instance is already present. Skipping setup.")
-            return
-
-        logger.info(f"Starting SQLite setup with database at: {db_path}")
-        self.conn = sqlite3.connect(db_path)
+        self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 
-        self._ensure_tables_exist()
+        if not db_exists:
+            logger.info(f"Creating new SQLite database at {self.db_path}")
+            self._ensure_tables_exist()
+            logger.info("SQLite tables created successfully.")
+        else:
+            logger.info("SQLite database already exists. Skipping table creation.")
 
         self._setup_completed = True
-
 
     def _ensure_tables_exist(self):
         logger.info("Creating SQLite tables...")
@@ -97,9 +94,7 @@ class SQLiteSetupExtension:
         """
         )
 
-        # Commit the changes
         self.conn.commit()
-
         logger.info("SQLite tables created successfully.")
 
     def spider_closed(self, spider):
