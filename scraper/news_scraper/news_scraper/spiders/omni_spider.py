@@ -1,4 +1,5 @@
 import uuid
+import scrapy
 from datetime import datetime
 
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
@@ -19,20 +20,36 @@ class OmniSpider(BaseSpider):
         self.ad_words = ["annons"]
         self.promotion_words = ["erbjudande", "omni mer"]
 
-    def spider_opened(self, spider):
+    def start_requests(self):
         """
-        Called when the spider is opened. Yields a WebsiteItem with website details.
-        Args:
-            spider (scrapy.Spider): The spider instance.
+        Generate initial requests for the spider and yield website metadata.
+        
         Yields:
-            WebsiteItem: An item containing the website ID, name, and URL."""
+            WebsiteItem: Contains website metadata (id, name, url)
+            Request: HTTP requests to the start_urls for parsing
+        """
+        # First yield the website item
         website_item = WebsiteItem()
         website_item["website_id"] = self.website_id
         website_item["website_name"] = self.website_name
         website_item["website_url"] = self.website_url
         yield website_item
 
+        # Then generate requests for the start URLs
+        for url in self.start_urls:
+            yield scrapy.Request(url=url, callback=self.parse)
+
     def parse(self, response):
+        """
+        Extracts article titles and URLs from the response.
+        Args:
+            response (scrapy.http.Response): The page response to parse.
+        Yields:
+            ArticleItem: An item containing article details.
+            WordItem: An item for each word in the article title.
+            OccurrenceItem: An item linking words to articles and websites.
+        """
+        # Fetch all articles on current page
         articles = response.xpath(
             "/html/body/main/div/div[2]/div/div[1]/div[1]/div/div"
         )
