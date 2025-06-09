@@ -12,7 +12,7 @@ class BaseSpider(scrapy.Spider):
         super(BaseSpider, self).__init__(*args, **kwargs)
         self.website_name = None
         self.website_url = None
-    
+
     def start_requests(self):
         """
         Generate initial requests for the spider and yield website metadata.
@@ -85,6 +85,6 @@ class BaseSpider(scrapy.Spider):
             return []
 
         title = title.strip().lower()
-        title = re.sub(r"[^\w\s]", "", title)
+        title = re.sub(r"[^\w\s\-]", "", title)
         tokens = title.split()
         return tokens
