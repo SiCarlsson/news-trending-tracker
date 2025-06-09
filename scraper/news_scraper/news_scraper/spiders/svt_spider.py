@@ -24,6 +24,25 @@ class SVTSpider(BaseSpider):
         self.website_name = "SVT"
         self.website_url = "https://www.svt.se"
 
+    def start_requests(self):
+        """
+        Generate initial requests for the spider and yield website metadata.
+        
+        Yields:
+            WebsiteItem: Contains website metadata (id, name, url)
+            Request: HTTP requests to the start_urls for parsing
+        """
+        # First yield the website item
+        website_item = WebsiteItem()
+        website_item["website_id"] = self.website_id
+        website_item["website_name"] = self.website_name
+        website_item["website_url"] = self.website_url
+        yield website_item
+        
+        # Then generate requests for the start URLs
+        for url in self.start_urls:
+            yield scrapy.Request(url=url, callback=self.parse)
+
     def parse(self, response):
         """
         Extracts article titles and URLs from the response.
@@ -34,14 +53,6 @@ class SVTSpider(BaseSpider):
             WordItem: An item for each word in the article title.
             OccurrenceItem: An item linking words to articles and websites.
         """
-        # Yield website item only once per spider
-        if response.url == self.start_urls[0]:
-            website_item = WebsiteItem()
-            website_item["website_id"] = self.website_id
-            website_item["website_name"] = self.website_name
-            website_item["website_url"] = self.website_url
-            yield website_item
-
         # Fetch all articles on current page
         articles = response.xpath('//*[@id="innehall"]/div/section/ul//li')
 
