@@ -1,11 +1,12 @@
 import scrapy
-import re
 import uuid
+
 from datetime import datetime
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
+from .base_spider import BaseSpider
 
 
-class SVTSpider(scrapy.Spider):
+class SVTSpider(BaseSpider):
     name = "svt"
     allowed_domains = ["svt.se"]
     start_urls = [
@@ -29,7 +30,9 @@ class SVTSpider(scrapy.Spider):
         Args:
             response (scrapy.http.Response): The page response to parse.
         Yields:
-            dict: A dictionary containing the title and URL of each article.
+            ArticleItem: An item containing article details.
+            WordItem: An item for each word in the article title.
+            OccurrenceItem: An item linking words to articles and websites.
         """
         # Yield website item only once per spider
         if response.url == self.start_urls[0]:
@@ -76,19 +79,3 @@ class SVTSpider(scrapy.Spider):
                 occurrence_item["article_id"] = article_id
                 occurrence_item["timestamp"] = occurrence_timestamp
                 yield occurrence_item
-
-    def tokenize_title(self, title):
-        """
-        Tokenizes a title by cleaning and splitting it into words. Filters out special characters and blank words.
-        Args:
-            title (str): The title to tokenize.
-        Returns:
-            list: A list of words (tokens).
-        """
-        if not title:
-            return []
-
-        title = title.strip().lower()
-        title = re.sub(r"[^\w\s]", "", title)
-        tokens = title.split()
-        return tokens
