@@ -21,3 +21,8 @@ class OccurrenceItem(scrapy.Item):
     website_id = scrapy.Field()
     article_id = scrapy.Field()
     timestamp = scrapy.Field()
+
+    # Additional fields for linking (will be removed in BigQueryPipoline)
+    word_text = scrapy.Field()
+    article_url = scrapy.Field()
+    website_url = scrapy.Field()

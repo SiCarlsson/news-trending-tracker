@@ -1,4 +1,3 @@
-# filepath: /Users/scarlsson/Programmering/Current projects/news-trending-tracker/scraper/news_scraper/news_scraper/spiders/omni_spider.py
 import scrapy
 from .base_spider import BaseSpider
 
@@ -26,7 +25,7 @@ class OmniSpider(BaseSpider):
             WordItem: An item for each word in the article title.
             OccurrenceItem: An item linking words to articles and websites.
         """
-        # Fetch all articles on current page
+        # Fetch all articles
         articles = response.xpath(
             "/html/body/main/div/div[2]/div/div[1]/div[1]/div/div"
         )
@@ -45,9 +44,7 @@ class OmniSpider(BaseSpider):
             ).get()
             article_url = article.xpath(".//div/div[2]/article/div/a/@href").get()
 
-            # Create article item using base spider method
-            article_id, article_item = self.create_article_item(article_title, article_url)
+            article_item = self.create_article_item(article_title, article_url)
             yield article_item
 
-            # Process words using base spider method
-            yield from self.process_article_words(article_title, article_id)
+            yield from self.process_article_words(article_title, article_url)

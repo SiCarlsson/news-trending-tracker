@@ -36,7 +36,7 @@ class SVTSpider(BaseSpider):
             article_title = article.xpath(".//article/a/@title").get()
             article_url = article.xpath(".//article/a/@href").get()
 
-            article_id, article_item = self.create_article_item(article_title, article_url)
+            article_item = self.create_article_item(article_title, article_url)
             yield article_item
 
-            yield from self.process_article_words(article_title, article_id)
+            yield from self.process_article_words(article_title, article_url)
