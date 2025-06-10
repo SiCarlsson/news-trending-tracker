@@ -1,6 +1,7 @@
 import scrapy
 from .base_spider import BaseSpider
 
+
 class DISpider(BaseSpider):
     name = "di"
     allowed_domains = ["di.se"]
@@ -22,9 +23,8 @@ class DISpider(BaseSpider):
             OccurrenceItem: An item linking words to articles and websites.
         """
         # Fetch all articles
-        articles = response.xpath(
-            "//article"
-        )
+        articles = response.xpath("//article")
+        
         for article in articles:
             article_title = article.xpath(".//div/div/a/div[1]/h2/text()").get()
             article_url = article.xpath(".//div/div/a/@href").get()
