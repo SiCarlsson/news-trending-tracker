@@ -1,6 +1,7 @@
 import scrapy
 from .base_spider import BaseSpider
 
+
 class ExpressenSpider(BaseSpider):
     name = "expressen"
     allowed_domains = ["expressen.se"]

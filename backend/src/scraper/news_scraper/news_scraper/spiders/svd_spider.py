@@ -1,6 +1,7 @@
 import scrapy
 from .base_spider import BaseSpider
 
+
 class SVDSpider(BaseSpider):
     name = "svd"
     allowed_domains = ["svd.se"]

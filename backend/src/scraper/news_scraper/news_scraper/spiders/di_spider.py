@@ -24,7 +24,7 @@ class DISpider(BaseSpider):
         """
         # Fetch all articles
         articles = response.xpath("//article")
-        
+
         for article in articles:
             article_title = article.xpath(".//div/div/a/div[1]/h2/text()").get()
             article_url = article.xpath(".//div/div/a/@href").get()
