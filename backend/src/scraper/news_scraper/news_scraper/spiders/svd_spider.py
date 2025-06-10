@@ -8,7 +8,6 @@ class SVDSpider(BaseSpider):
 
     def __init__(self, *args, **kwargs):
         super(SVDSpider, self).__init__(*args, **kwargs)
-
         self.website_name = "Svenska Dagbladet"
         self.website_url = "https://www.svd.se"
 
