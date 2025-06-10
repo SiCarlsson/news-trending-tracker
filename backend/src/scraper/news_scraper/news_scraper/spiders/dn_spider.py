@@ -1,6 +1,7 @@
 import scrapy
 from .base_spider import BaseSpider
 
+
 class DNSpider(BaseSpider):
     name = "dn"
     allowed_domains = ["dn.se"]

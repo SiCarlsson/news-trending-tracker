@@ -32,7 +32,7 @@ class AftonbladetSpider(BaseSpider):
 
             article_url = article.xpath(".//a/@href").get()
 
-            # Ads give None values 
+            # Ads give None values
             if article_title is None or article_url is None:
                 continue
 

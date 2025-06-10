@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
 
+
 class BaseSpider(scrapy.Spider):
     """
     Base class for all spiders. It provides common functionality that can be shared across different spiders.
@@ -16,7 +17,7 @@ class BaseSpider(scrapy.Spider):
     def start_requests(self):
         """
         Generate initial requests for the spider and yield website metadata.
-        
+
         Yields:
             WebsiteItem: Contains website metadata
             Request: HTTP requests to the start_urls for parsing
@@ -32,11 +33,11 @@ class BaseSpider(scrapy.Spider):
     def create_article_item(self, article_title, article_url):
         """
         Creates an ArticleItem without ID
-        
+
         Args:
             article_title (str): The title of the article
             article_url (str): The URL of the article
-            
+
         Returns:
             ArticleItem: The created item without ID
         """
@@ -48,11 +49,11 @@ class BaseSpider(scrapy.Spider):
     def process_article_words(self, article_title, article_url):
         """
         Processes words in an article title and creates WordItem and OccurrenceItem for each word.
-        
+
         Args:
             article_title (str): The title of the article
             article_url (str): The URL of the article to link occurrences to
-            
+
         Yields:
             WordItem: An item for each word in the article title (without ID)
             OccurrenceItem: An item linking words to articles and websites (without IDs)
