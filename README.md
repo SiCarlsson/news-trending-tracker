@@ -12,7 +12,7 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 
 ## 🛠️ Tech Stack  
 - **Scraping:** Python (Scrapy)  
-- **Data Pipeline:** Kafka / Apache Spark  
+- **Data Pipeline:** Kafka & Apache Spark  
 - **Database:** Google BigQuery  
 - **Backend API:** Java + Spring Boot
 - **Frontend:** React, Typescript, TailwindCSS
