@@ -36,6 +36,10 @@ class SVTSpider(BaseSpider):
             article_title = article.xpath(".//article/a/@title").get()
             article_url = article.xpath(".//article/a/@href").get()
 
+            if not article_title or not article_url:
+                self.logger.warning("Missing article title or URL on page: %s", response.url)
+                continue
+
             article_item = self.create_article_item(article_title, article_url)
             yield article_item
 
