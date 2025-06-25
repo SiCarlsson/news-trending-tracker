@@ -21,10 +21,14 @@ class KafkaPipeline:
         try:
             self.producer = KafkaProducer(
                 bootstrap_servers=["localhost:9092"],
-                value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+                value_serializer=lambda v: json.dumps(v, ensure_ascii=False).encode(
+                    "utf-8"
+                ),
                 key_serializer=lambda k: str(k).encode("utf-8") if k else None,
+                compression_type="gzip",
+                retries=3,
             )
-            logger.info("Kafka producer initialized.")
+            logger.info("Kafka producer initialized with UTF-8 support.")
         except Exception as e:
             logger.error(f"Failed to initialize Kafka producer: {e}")
 
