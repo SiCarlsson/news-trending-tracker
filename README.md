@@ -1,13 +1,14 @@
 # News Trending Tracker 📊  
-**⚠️ Under Development**  
+**⚠️ Under Development - Currently developing the data pipeline regarding Kafka and Apache Spark**
 
 A real-time data pipeline that scrapes news websites, extracts trending words, and visualizes trends over time.  
 
 ## 🚀 Features  
 - Scrapes news headlines from multiple sources  
-- Extracts and ranks trending words  
+- Data pipeline includes **Kafka** and **Apache Spark**
 - Stores data in **Google BigQuery**  
 - Provides a REST API using Java + Spring Boot  
+- Extracts and ranks trending words
 - Visualizes trends with **Looker**  
 
 ## 🛠️ Tech Stack  
@@ -16,7 +17,7 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 - **Database:** Google BigQuery  
 - **Backend API:** Java + Spring Boot
 - **Frontend:** React, Typescript, TailwindCSS
-- **Visualization:** Looker  
+- **Visualization:** Custom made UI using frontend libraries 
 
 ## 🔧 Setup  
 1. **Clone the repository**  
