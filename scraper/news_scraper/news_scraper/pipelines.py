@@ -1,6 +1,9 @@
 import logging
 import uuid
 
+import json
+from kafka import KafkaProducer
+
 from google.cloud import bigquery
 from google.oauth2 import service_account
 from scrapy.utils.project import get_project_settings
@@ -8,6 +11,38 @@ from itemadapter import ItemAdapter
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
 
 logger = logging.getLogger(__name__)
+
+
+class KafkaPipeline:
+    def __init__(self):
+        self.producer = None
+
+    def open_spider(self, spider):
+        try:
+            self.producer = KafkaProducer(
+                bootstrap_servers=["localhost:9092"],
+                value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+                key_serializer=lambda k: str(k).encode("utf-8") if k else None,
+            )
+            logger.info("Kafka producer initialized.")
+        except Exception as e:
+            logger.error(f"Failed to initialize Kafka producer: {e}")
+
+    def close_spider(self, spider):
+        if self.producer:
+            self.producer.flush()
+            self.producer.close()
+            logger.info("Kafka producer flushed and closed.")
+
+    def process_item(self, item, spider):
+        # Determine topic based on item type
+        item_dict = ItemAdapter(item).asdict()
+        topic = f"news-{type(item).__name__.lower()}"
+
+        self.producer.send(topic, item_dict)
+        return item
+
+
 class BigQueryPipeline:
     def __init__(self):
         settings = get_project_settings()
@@ -24,16 +59,16 @@ class BigQueryPipeline:
 
         self.client = bigquery.Client(credentials=credentials, project=project_id)
         self.dataset_id = settings.get("BIGQUERY_DATASET_ID")
-        
+
         # Cache for IDs during processing
         self.website_cache = {}
-        self.article_cache = {} 
+        self.article_cache = {}
         self.word_cache = {}
 
     def _generate_id(self):
         """
         Generates a unique identifier.
-        
+
         Returns:
             str: A unique identifier string.
         """
@@ -70,14 +105,14 @@ class BigQueryPipeline:
         """Process WebsiteItem by generating ID and inserting if not exists."""
         item_dict = ItemAdapter(item).asdict()
         website_url = item_dict["website_url"]
-        
+
         if not self.website_exists_in_bigquery(website_url):
             website_id = self._generate_id()
             item_dict["website_id"] = website_id
             self.website_cache[website_url] = website_id
-            
+
             item["website_id"] = website_id
-            
+
             self.insert_to_bigquery("websites", item, spider)
         else:
             website_id = self._get_existing_website_id(website_url)
@@ -85,18 +120,20 @@ class BigQueryPipeline:
                 self.website_cache[website_url] = website_id
                 item["website_id"] = website_id
             else:
-                spider.logger.error(f"Failed to get existing website ID for: {website_url}")
+                spider.logger.error(
+                    f"Failed to get existing website ID for: {website_url}"
+                )
 
     def _process_article_item(self, item, spider):
         """Process ArticleItem by generating ID and inserting if not exists."""
         item_dict = ItemAdapter(item).asdict()
         article_url = item_dict["article_url"]
-        
+
         if not self.article_exists_in_bigquery(article_url):
             article_id = self._generate_id()
             item_dict["article_id"] = article_id
             self.article_cache[article_url] = article_id
-            
+
             website_url = spider.website_url
             website_id = self.website_cache.get(website_url)
             if not website_id:
@@ -106,12 +143,12 @@ class BigQueryPipeline:
                 else:
                     spider.logger.error(f"Failed to get website ID for: {website_url}")
                     return
-            
+
             item_dict["website_id"] = website_id
-            
+
             item["article_id"] = article_id
             item["website_id"] = website_id
-            
+
             self.insert_to_bigquery("articles", item, spider)
         else:
             article_id = self._get_existing_article_id(article_url)
@@ -119,20 +156,22 @@ class BigQueryPipeline:
                 self.article_cache[article_url] = article_id
                 item["article_id"] = article_id
             else:
-                spider.logger.error(f"Failed to get existing article ID for: {article_url}")
+                spider.logger.error(
+                    f"Failed to get existing article ID for: {article_url}"
+                )
 
     def _process_word_item(self, item, spider):
         """Process WordItem by generating ID and inserting if not exists."""
         item_dict = ItemAdapter(item).asdict()
         word_text = item_dict["word_text"]
-        
+
         if not self.word_exists_in_bigquery(word_text):
             word_id = self._generate_id()
             item_dict["word_id"] = word_id
             self.word_cache[word_text] = word_id
-            
+
             item["word_id"] = word_id
-            
+
             self.insert_to_bigquery("words", item, spider)
         else:
             word_id = self._get_existing_word_id(word_text)
@@ -145,30 +184,30 @@ class BigQueryPipeline:
     def _process_occurrence_item(self, item, spider):
         """Process OccurrenceItem by linking to existing entities and inserting."""
         item_dict = ItemAdapter(item).asdict()
-        
+
         word_text = item_dict["word_text"]
         article_url = item_dict["article_url"]
         website_url = item_dict["website_url"]
-        
+
         # Get IDs from cache or BigQuery
         word_id = self.word_cache.get(word_text)
         if not word_id:
             word_id = self._get_existing_word_id(word_text)
             if word_id:
                 self.word_cache[word_text] = word_id
-        
+
         article_id = self.article_cache.get(article_url)
         if not article_id:
             article_id = self._get_existing_article_id(article_url)
             if article_id:
                 self.article_cache[article_url] = article_id
-        
+
         website_id = self.website_cache.get(website_url)
         if not website_id:
             website_id = self._get_existing_website_id(website_url)
             if website_id:
                 self.website_cache[website_url] = website_id
-        
+
         # Only process if all required IDs are available
         if not all([word_id, article_id, website_id]):
             spider.logger.warning(
@@ -177,20 +216,20 @@ class BigQueryPipeline:
                 f"Skipping occurrence for word '{word_text}'"
             )
             return
-        
+
         occurrence_id = self._generate_id()
-        
+
         # Update item with proper IDs
         item_dict["occurrence_id"] = occurrence_id
         item_dict["word_id"] = word_id
         item_dict["article_id"] = article_id
         item_dict["website_id"] = website_id
-        
+
         # Remove the text fields used for linking
         item_dict.pop("word_text", None)
         item_dict.pop("article_url", None)
         item_dict.pop("website_url", None)
-        
+
         if not self.occurrence_exists_in_bigquery(item_dict):
             self.insert_to_bigquery("occurrences", item_dict, spider)
         else:
@@ -337,7 +376,7 @@ class BigQueryPipeline:
         )
         query_job = self.client.query(query, job_config)
         result = query_job.result()
-        
+
         for row in result:
             return row.website_id
         return None
@@ -356,7 +395,7 @@ class BigQueryPipeline:
         )
         query_job = self.client.query(query, job_config)
         result = query_job.result()
-        
+
         for row in result:
             return row.article_id
         return None
@@ -375,7 +414,7 @@ class BigQueryPipeline:
         )
         query_job = self.client.query(query, job_config)
         result = query_job.result()
-        
+
         for row in result:
             return row.word_id
         return None
