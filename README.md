@@ -1,5 +1,5 @@
 # News Trending Tracker 📊  
-**⚠️ Under Development - Currently developing the data pipeline regarding Kafka and Apache Spark**
+**⚠️ Under Development - Currently developing the data pipeline regarding Kafka and Apache Spark ⚠️**
 
 A real-time data pipeline that scrapes news websites, extracts trending words, and visualizes trends over time.  
 
