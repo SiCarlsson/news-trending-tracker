@@ -14,7 +14,8 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 ## 🛠️ Tech Stack  
 - **Scraping:** Python (Scrapy)  
 - **Data Pipeline:** Kafka & Apache Spark  
-- **Database:** Google BigQuery  
+- **Database:** Google BigQuery
+- **Infrastructure:** Terraform
 - **Backend API:** Java + Spring Boot
 - **Frontend:** React, Typescript, TailwindCSS
 - **Visualization:** Custom made UI using frontend libraries 
@@ -27,10 +28,10 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 
 2. **Set Up Google Cloud**
 - Create a **Google Cloud** project and enable **BigQuery API**.  
-- Generate a **Service Account Key** with **BigQuery Data Editor** and **BigQuery Job User** roles.  
-- Download the key file and place it in the project directory.  
-- Update the `BigQuery variables` in `Settings.py` file to suit your project.
-- BigQuery Dataset and Tables are automatically created when running the program.
+- Create a **Service Account** and generate a **Service Account Key** with **BigQuery Data Editor** and **BigQuery Job User** roles for the backend services.
+- Download the keys file and place it in the project directory.  
+- Update the `Terraform variables` by duplicating `./terraform/terraform.tfvars.example` and change the varaibales to suit your project.
+- BigQuery Dataset and Tables are automatically executed when deploying the program.
 
 ## 📚 Appendix: Database Tables
 #### Websites Table
