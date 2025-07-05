@@ -1,0 +1,5 @@
+# Copy this file to terraform.tfvars and customize the values
+
+project_id       = "news-trending-tracker"
+dataset_id       = "scraper_data"
+dataset_location = "EU"

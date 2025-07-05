@@ -14,17 +14,6 @@ BOT_NAME = "news_scraper"
 SPIDER_MODULES = ["news_scraper.spiders"]
 NEWSPIDER_MODULE = "news_scraper.spiders"
 
-# BigQuery settings
-BIGQUERY_CREDENTIALS_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "..",
-    "credentials",
-    "bigquery_scraper_service-account.json",
-)
-BIGQUERY_PROJECT_ID = "news-trending-tracker"
-BIGQUERY_DATASET_ID = "scraper_data"
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'news_scraper (+http://www.yourdomain.com)'
 
