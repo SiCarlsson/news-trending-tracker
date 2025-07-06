@@ -5,12 +5,12 @@ services:
     volumes:
       - ./terraform:/terraform
       - ./credentials:/credentials
-    entrypoint: [""]
+    entrypoint: ["sh", "-c"]
     command: >
-      sh -c "
-      terraform init &&
-      terraform plan &&
-      terraform apply -auto-approve
+      "
+        terraform init &&
+        terraform plan &&
+        terraform apply -auto-approve
       "
     restart: on-failure
 
