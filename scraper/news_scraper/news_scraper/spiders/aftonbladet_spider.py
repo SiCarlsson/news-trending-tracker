@@ -1,5 +1,6 @@
 import scrapy
 from .base_spider import BaseSpider
+from news_scraper.utils import generate_article_uuid
 
 
 class AftonbladetSpider(BaseSpider):
@@ -15,6 +16,7 @@ class AftonbladetSpider(BaseSpider):
     def parse(self, response):
         """
         Extracts article titles and URLs from the response.
+        
         Args:
             response (scrapy.http.Response): The page response to parse.
         Yields:
@@ -36,7 +38,7 @@ class AftonbladetSpider(BaseSpider):
             if article_title is None or article_url is None:
                 continue
 
-            article_id = self.generate_uuid()
+            article_id = generate_article_uuid(article_url, self.website_url)
             article_item = self.create_article_item(
                 article_title, article_url, article_id
             )

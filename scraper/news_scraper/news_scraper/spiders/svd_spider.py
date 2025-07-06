@@ -1,5 +1,6 @@
 import scrapy
 from .base_spider import BaseSpider
+from news_scraper.utils import generate_article_uuid
 
 
 class SVDSpider(BaseSpider):
@@ -15,6 +16,7 @@ class SVDSpider(BaseSpider):
     def parse(self, response):
         """
         Extracts article titles and URLs from the response.
+        
         Args:
             response (scrapy.http.Response): The page response to parse.
         Yields:
@@ -29,7 +31,7 @@ class SVDSpider(BaseSpider):
             article_title = article.xpath(".//a/h2/text()").get()
             article_url = article.xpath(".//a/@href").get()
 
-            article_id = self.generate_uuid()
+            article_id = generate_article_uuid(article_url, self.website_url)
             article_item = self.create_article_item(
                 article_title, article_url, article_id
             )
