@@ -46,7 +46,10 @@ class DNSpider(BaseSpider):
             if article_url in self.unwanted_urls:
                 continue
 
-            article_item = self.create_article_item(article_title, article_url)
+            article_id = self.generate_uuid()
+            article_item = self.create_article_item(
+                article_title, article_url, article_id
+            )
             yield article_item
 
-            yield from self.process_article_words(article_title, article_url)
+            yield from self.process_article_words(article_title, article_id)

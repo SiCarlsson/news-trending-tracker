@@ -33,11 +33,22 @@ class KafkaPipeline:
             logger.info("Kafka producer flushed and closed.")
 
     def process_item(self, item, spider):
-        # Determine topic based on item type
         item_dict = ItemAdapter(item).asdict()
-        topic = f"news-{type(item).__name__.lower()}"
+        item_type = type(item).__name__.lower()
 
-        self.producer.send(topic, item_dict)
-        logger.info(f"Sent item to topic {topic}: {item_dict}")
+        topic_mapping = {
+            "websiteitem": "news-websites",
+            "articleitem": "news-articles",
+            "worditem": "news-words",
+            "occurrenceitem": "news-occurrences",
+        }
+
+        topic = topic_mapping.get(item_type, f"news-{item_type}")
+
+        try:
+            self.producer.send(topic, item_dict)
+            logger.info(f"Sent item to topic {topic}: {item_dict}")
+        except Exception as e:
+            logger.error(f"Failed to send item to topic {topic}: {e}")
+
         return item
-    

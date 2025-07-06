@@ -1,5 +1,7 @@
 import scrapy
 import re
+import uuid
+
 from datetime import datetime
 from news_scraper.items import WebsiteItem, ArticleItem, WordItem, OccurrenceItem
 
@@ -11,42 +13,51 @@ class BaseSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(BaseSpider, self).__init__(*args, **kwargs)
+        self.website_id = self.generate_uuid()
         self.website_name = None
         self.website_url = None
 
     def start_requests(self):
         """
-        Generate initial requests for the spider and yield website metadata.
-
-        Yields:
-            WebsiteItem: Contains website metadata
-            Request: HTTP requests to the start_urls for parsing
+        Initializes the spider by yielding requests for each start URL.
         """
-        website_item = WebsiteItem()
-        website_item["website_name"] = self.website_name
-        website_item["website_url"] = self.website_url
-        yield website_item
-
+        yield self.create_website_item()
+        
         for url in self.start_urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
-    def create_article_item(self, article_title, article_url):
+    def create_website_item(self):
         """
-        Creates an ArticleItem without ID
+        Creates a WebsiteItem
+
+        Returns:
+            WebsiteItem: The created item
+        """
+        website_item = WebsiteItem()
+        website_item["website_id"] = self.website_id
+        website_item["website_name"] = self.website_name
+        website_item["website_url"] = self.website_url
+        return website_item
+
+    def create_article_item(self, article_title, article_url, article_id):
+        """
+        Creates an ArticleItem
 
         Args:
             article_title (str): The title of the article
             article_url (str): The URL of the article
 
         Returns:
-            ArticleItem: The created item without ID
+            ArticleItem: The created item
         """
         article_item = ArticleItem()
+        article_item["article_id"] = article_id
+        article_item["website_id"] = self.website_id
         article_item["article_title"] = article_title
         article_item["article_url"] = article_url
         return article_item
 
-    def process_article_words(self, article_title, article_url):
+    def process_article_words(self, article_title, article_id):
         """
         Processes words in an article title and creates WordItem and OccurrenceItem for each word.
 
@@ -64,15 +75,35 @@ class BaseSpider(scrapy.Spider):
 
             # Create word item without ID
             word_item = WordItem()
+            word_item["word_id"] = self.generate_uuid()
             word_item["word_text"] = word_lower
             yield word_item
 
             occurrence_item = OccurrenceItem()
-            occurrence_item["word_text"] = word_lower
-            occurrence_item["article_url"] = article_url
-            occurrence_item["website_url"] = self.website_url
-            occurrence_item["timestamp"] = datetime.now().isoformat()
+            occurrence_item["occurrence_id"] = self.generate_uuid()
+            occurrence_item["word_id"] = word_item["word_id"]
+            occurrence_item["website_id"] = self.website_id
+            occurrence_item["article_id"] = article_id
+            occurrence_item["timestamp"] = self.generate_timestamp()
             yield occurrence_item
+
+    def generate_uuid(self):
+        """
+        Generates a UUID string.
+
+        Returns:
+            str: A UUID string.
+        """
+        return str(uuid.uuid4())
+
+    def generate_timestamp(self):
+        """
+        Generates a timestamp in ISO format.
+
+        Returns:
+            str: The current timestamp in ISO format.
+        """
+        return datetime.now().isoformat()
 
     def tokenize_title(self, title):
         """

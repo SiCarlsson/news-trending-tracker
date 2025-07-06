@@ -36,7 +36,10 @@ class AftonbladetSpider(BaseSpider):
             if article_title is None or article_url is None:
                 continue
 
-            article_item = self.create_article_item(article_title, article_url)
+            article_id = self.generate_uuid()
+            article_item = self.create_article_item(
+                article_title, article_url, article_id
+            )
             yield article_item
 
-            yield from self.process_article_words(article_title, article_url)
+            yield from self.process_article_words(article_title, article_id)
