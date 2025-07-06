@@ -7,8 +7,6 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-import os
-
 BOT_NAME = "news_scraper"
 
 SPIDER_MODULES = ["news_scraper.spiders"]
@@ -59,15 +57,12 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-EXTENSIONS = {
-    "news_scraper.extensions.BigQuerySetupExtension": 300,
-}
+# EXTENSIONS = }
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     "news_scraper.pipelines.KafkaPipeline": 200,
-    #"news_scraper.pipelines.BigQueryPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
