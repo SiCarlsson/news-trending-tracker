@@ -1,4 +1,5 @@
-cache.db
+# Spark artifacts and temporary files
+artifacts/
 
 # APIs and Keys
 credentials/
