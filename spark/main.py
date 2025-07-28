@@ -1,20 +1,24 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col
+from schemas import NewsSchemas
+
+topics = ["news-articles", "news-occurrences", "news-words", "news-websites"]
 
 spark = SparkSession.builder \
-    .appName("KafkaToBigQuery") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0") \
+    .appName("NewsStreamProcessor") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.3") \
     .getOrCreate()
 
-topics = ["news-articles", "news-occurrences", "news-websites", "news-words"]
-
+# Read from Kafka
 df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", ",".join(topics)) \
+    .option("subscribe", "news-articles") \
     .load()
 
-query = df.writeStream \
-    .format("console") \
-    .start()
-
-query.awaitTermination()
+# Display the streamed data
+df.selectExpr("CAST(value AS STRING)").writeStream \
+.outputMode("append") \
+.format("console") \
+.start() \
+.awaitTermination()
