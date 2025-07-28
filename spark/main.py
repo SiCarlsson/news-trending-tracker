@@ -13,7 +13,7 @@ spark = SparkSession.builder \
 df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "news-articles") \
+    .option("subscribe", ",".join(topics)) \
     .load()
 
 # Display the streamed data
