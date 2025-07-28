@@ -1,6 +1,7 @@
 services:
   terraform-init:
     image: hashicorp/terraform:1.5
+    container_name: terraform-init
     working_dir: /terraform
     volumes:
       - ./terraform:/terraform
@@ -8,14 +9,17 @@ services:
     entrypoint: ["sh", "-c"]
     command: >
       "
+        echo 'Initializing BigQuery tables...' &&
         terraform init &&
         terraform plan &&
-        terraform apply -auto-approve
+        terraform apply -auto-approve &&
+        echo 'BigQuery tables created successfully!'
       "
     restart: on-failure
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -23,9 +27,11 @@ services:
       KAFKA_OPTS: "-Dfile.encoding=UTF-8"
       LANG: "en_US.UTF-8"
       LC_ALL: "en_US.UTF-8"
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -42,11 +48,32 @@ services:
       KAFKA_OPTS: "-Dfile.encoding=UTF-8"
       LANG: "en_US.UTF-8"
       LC_ALL: "en_US.UTF-8"
+    restart: unless-stopped
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    entrypoint: ["sh", "-c"]
+    command: >
+      "
+        echo 'Kafka is ready! Creating topics...' &&
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --topic news-websites &&
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --topic news-articles &&
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --topic news-words &&
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --topic news-occurrences &&
+        echo 'All Kafka topics created successfully!' &&
+        kafka-topics --list --bootstrap-server kafka:29092
+      "
+    restart: on-failure
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
     depends_on:
       - kafka
+      - kafka-init
     ports:
       - "8080:8080"
     environment:
@@ -56,6 +83,7 @@ services:
       JAVA_OPTS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
       LANG: "en_US.UTF-8"
       LC_ALL: "en_US.UTF-8"
+    restart: unless-stopped
 
   spark-master:
     image: bitnami/spark:latest
@@ -68,6 +96,7 @@ services:
     ports:
       - "8081:8080"
       - "7077:7077"
+    restart: unless-stopped
 
   spark-worker:
     image: bitnami/spark:latest
@@ -80,6 +109,7 @@ services:
     depends_on:
       - spark-master
       - kafka
+      - kafka-init
     ports:
       - "8082:8082"
     restart: unless-stopped
