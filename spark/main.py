@@ -19,11 +19,10 @@ spark = (
     )
     .config(
         "spark.hadoop.google.cloud.auth.service.account.json.keyfile",
-        "/Users/scarlsson/Programmering/Current projects/news-trending-tracker/credentials/backend-bigquery-service-account.json",
+        "../credentials/backend-bigquery-service-account.json",
     )
     .config("spark.hadoop.google.cloud.auth.service.account.enable", "true")
     .config("spark.hadoop.google.cloud.auth.type", "SERVICE_ACCOUNT_JSON_KEYFILE")
-    .config("spark.sql.execution.arrow.pyspark.enabled", "false")
     .getOrCreate()
 )
 
@@ -49,10 +48,10 @@ def write_to_bigquery(df, table_name):
     ).option("writeMethod", "direct").mode("append").save()
 
 
-# Example usage:
-word_df = create_sample_word_data()
-print("Sample word data created:")
-word_df.show()
-print("Writing sample word data to BigQuery...")
-write_to_bigquery(word_df, "words")
-print("Sample word data written to BigQuery successfully.")
+if __name__ == "__main__":
+    word_df = create_sample_word_data()
+    print("Sample word data created:")
+    word_df.show()
+    print("Writing sample word data to BigQuery...")
+    write_to_bigquery(word_df, "words")
+    print("Sample word data written to BigQuery successfully.")
