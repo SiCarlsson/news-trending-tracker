@@ -24,6 +24,7 @@ class SparkSessionFactory:
 
         return (
             SparkSession.builder.appName(config.SPARK_APP_NAME)
+            .master(config.SPARK_MASTER)
             .config("spark.jars.packages", config.spark_packages_string)
             .config(
                 "spark.hadoop.google.cloud.auth.service.account.json.keyfile",
@@ -34,7 +35,5 @@ class SparkSessionFactory:
                 "spark.hadoop.google.cloud.auth.type", "SERVICE_ACCOUNT_JSON_KEYFILE"
             )
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-            .config("spark.sql.adaptive.enabled", "true")
-            .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
             .getOrCreate()
         )

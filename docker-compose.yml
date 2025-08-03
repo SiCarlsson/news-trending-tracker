@@ -113,3 +113,22 @@ services:
     ports:
       - "8082:8082"
     restart: unless-stopped
+  
+  spark-app:
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    container_name: spark-app
+    depends_on:
+      - spark-master
+      - spark-worker
+    volumes:
+      - ./credentials:/app/credentials
+    env_file:
+      - ./spark/.env
+    environment:
+      # Override Docker-specific values
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - BIGQUERY_CREDENTIALS_PATH=/app/credentials/backend-bigquery-service-account.json
+    restart: unless-stopped

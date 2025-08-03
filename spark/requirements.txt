@@ -1,5 +1,4 @@
 # Spark application requirements
-pyspark==3.5.3
+# Note: pyspark is already included in the bitnami/spark image
 google-cloud-bigquery==3.13.0
-py4j==0.10.9.7
 python-dotenv==1.0.0

@@ -43,6 +43,7 @@ class Config:
 
     # Spark Configuration
     SPARK_APP_NAME = os.getenv("SPARK_APP_NAME", "NewsStreamProcessor")
+    SPARK_MASTER = os.getenv("SPARK_MASTER_URL", "local[*]")
     SPARK_CHECKPOINT_LOCATION = os.getenv(
         "SPARK_CHECKPOINT_LOCATION", "/tmp/spark_checkpoint"
     )
