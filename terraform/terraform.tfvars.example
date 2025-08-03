@@ -1,6 +1,7 @@
-# Copy this file to terraform.tfvars and customize the values
+# Terraform variables are now loaded from .env file via TF_VAR_ environment variables
+# Copy this file to terraform.tfvars and customize the values to have environment-specific overrides if needed
 
-project_id          = "news-trending-tracker"
-dataset_id          = "scraper_data"
-staging_dataset_id  = "staging_scraper_data"
-dataset_location    = "EU"
+# bigquery_project_id          = "your-project-id"
+# bigquery_dataset_id          = "scraper_data" 
+# bigquery_staging_dataset_id  = "staging_scraper_data"
+# bigquery_dataset_location    = "europe-west1"

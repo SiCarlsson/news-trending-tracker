@@ -11,7 +11,8 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 
-    env_path = Path(__file__).parent / ".env"
+    # Load from root .env file
+    env_path = Path(__file__).parent.parent / ".env"
     if env_path.exists():
         load_dotenv(env_path)
 except ImportError:
@@ -31,10 +32,12 @@ class Config:
     KAFKA_STARTING_OFFSETS = os.getenv("KAFKA_STARTING_OFFSETS", "latest")
 
     # BigQuery Configuration
-    BIGQUERY_PROJECT_ID = os.getenv("BIGQUERY_PROJECT_ID", "news-trending-tracker")
-    BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "scraper_data")
+    BIGQUERY_PROJECT_ID = os.getenv(
+        "TF_VAR_bigquery_project_id", "news-trending-tracker"
+    )
+    BIGQUERY_DATASET = os.getenv("TF_VAR_bigquery_dataset_id", "scraper_data")
     BIGQUERY_STAGING_DATASET = os.getenv(
-        "BIGQUERY_STAGING_DATASET", "staging_scraper_data"
+        "TF_VAR_bigquery_staging_dataset_id", "staging_scraper_data"
     )
     BIGQUERY_CREDENTIALS_PATH = os.getenv(
         "BIGQUERY_CREDENTIALS_PATH",
@@ -47,7 +50,7 @@ class Config:
     SPARK_CHECKPOINT_LOCATION = os.getenv(
         "SPARK_CHECKPOINT_LOCATION", "/tmp/spark_checkpoint"
     )
-    SPARK_PROCESSING_TIME = os.getenv("SPARK_PROCESSING_TIME", "180 seconds")
+    SPARK_PROCESSING_INTERVAL = os.getenv("SPARK_PROCESSING_INTERVAL", "60 seconds")
 
     # Spark Packages
     SPARK_PACKAGES = [

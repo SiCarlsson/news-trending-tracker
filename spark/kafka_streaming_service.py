@@ -82,7 +82,7 @@ class KafkaStreamingService:
                 f"{self.config.SPARK_CHECKPOINT_LOCATION}/{table_name}",
             )
             .outputMode("append")
-            .trigger(processingTime=self.config.SPARK_PROCESSING_TIME)
+            .trigger(processingTime=self.config.SPARK_PROCESSING_INTERVAL)
             .start()
         )
 

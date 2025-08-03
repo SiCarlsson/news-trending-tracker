@@ -6,6 +6,8 @@ services:
     volumes:
       - ./terraform:/terraform
       - ./credentials:/credentials
+    env_file:
+      - ./.env
     entrypoint: ["sh", "-c"]
     command: >
       "
@@ -125,9 +127,8 @@ services:
     volumes:
       - ./credentials:/app/credentials
     env_file:
-      - ./spark/.env
+      - ./.env
     environment:
-      # Override Docker-specific values
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPARK_MASTER_URL=spark://spark-master:7077
       - BIGQUERY_CREDENTIALS_PATH=/app/credentials/backend-bigquery-service-account.json

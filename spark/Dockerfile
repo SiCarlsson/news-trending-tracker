@@ -16,13 +16,17 @@ RUN apt-get update && \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-
 # Set Java environment variable (required for PySpark)
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 # Python optimizations
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+
+# Static application configuration
+ENV SPARK_APP_NAME=NewsStreamProcessor \
+    SPARK_PROCESSING_INTERVAL="10 seconds" \
+    KAFKA_STARTING_OFFSETS=latest
 
 # Create non-root user for security
 RUN groupadd -r -g 1001 spark && \

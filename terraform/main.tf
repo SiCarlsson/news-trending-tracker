@@ -9,17 +9,17 @@ terraform {
 
 provider "google" {
   credentials = file("../credentials/backend-bigquery-service-account.json")
-  project     = var.project_id
+  project     = var.bigquery_project_id
 }
 
 resource "google_bigquery_dataset" "custom_dataset" {
-  dataset_id = var.dataset_id
-  location   = var.dataset_location
+  dataset_id = var.bigquery_dataset_id
+  location   = var.bigquery_dataset_location
 }
 
 resource "google_bigquery_dataset" "staging_dataset" {
-  dataset_id = var.staging_dataset_id
-  location   = var.dataset_location
+  dataset_id = var.bigquery_staging_dataset_id
+  location   = var.bigquery_dataset_location
 }
 
 locals {
