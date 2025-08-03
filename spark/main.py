@@ -23,18 +23,6 @@ class NewsStreamProcessor:
         self.kafka_streaming_service = None
         self.queries = []
 
-    def _signal_handler(self, signum, frame):
-        """
-        Handle shutdown signals gracefully.
-
-        Args:
-            signum: Signal number received.
-            frame: Current stack frame.
-        """
-        print(f"\nReceived signal {signum}, shutting down gracefully...")
-        self.stop()
-        sys.exit(0)
-
     def start(self):
         """
         Start the streaming application.

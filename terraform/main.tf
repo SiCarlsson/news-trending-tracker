@@ -17,6 +17,11 @@ resource "google_bigquery_dataset" "custom_dataset" {
   location   = var.dataset_location
 }
 
+resource "google_bigquery_dataset" "staging_dataset" {
+  dataset_id = var.staging_dataset_id
+  location   = var.dataset_location
+}
+
 locals {
   tables = {
     websites = [
@@ -48,5 +53,12 @@ resource "google_bigquery_table" "tables" {
   for_each   = local.tables
   dataset_id = google_bigquery_dataset.custom_dataset.dataset_id
   table_id   = each.key
+  schema     = jsonencode(each.value)
+}
+
+resource "google_bigquery_table" "staging_table" {
+  for_each   = local.tables
+  dataset_id = google_bigquery_dataset.staging_dataset.dataset_id
+  table_id   = "staging_${each.key}"
   schema     = jsonencode(each.value)
 }

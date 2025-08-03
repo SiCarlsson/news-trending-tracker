@@ -33,6 +33,9 @@ class Config:
     # BigQuery Configuration
     BIGQUERY_PROJECT_ID = os.getenv("BIGQUERY_PROJECT_ID", "news-trending-tracker")
     BIGQUERY_DATASET = os.getenv("BIGQUERY_DATASET", "scraper_data")
+    BIGQUERY_STAGING_DATASET = os.getenv(
+        "BIGQUERY_STAGING_DATASET", "staging_scraper_data"
+    )
     BIGQUERY_CREDENTIALS_PATH = os.getenv(
         "BIGQUERY_CREDENTIALS_PATH",
         "../credentials/backend-bigquery-service-account.json",

@@ -29,6 +29,7 @@ class BigQueryWriter:
         self.client = bigquery.Client.from_service_account_json(self.credentials_path)
         self.project_id = Config.BIGQUERY_PROJECT_ID
         self.dataset = Config.BIGQUERY_DATASET
+        self.staging_dataset = Config.BIGQUERY_STAGING_DATASET
 
     def write_batch_to_bigquery(self, batch_df, batch_id, table_name, key_field):
         """
@@ -50,7 +51,7 @@ class BigQueryWriter:
         )
 
         deduplicated_df = batch_df.dropDuplicates([key_field])
-        staging_table = f"{self.project_id}.{self.dataset}.staging_{table_name}"
+        staging_table = f"{self.project_id}.{self.staging_dataset}.staging_{table_name}"
 
         self._write_to_staging_table(deduplicated_df, staging_table)
         self._merge_staging_to_main(

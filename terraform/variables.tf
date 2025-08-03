@@ -8,6 +8,11 @@ variable "dataset_id" {
   type        = string
 }
 
+variable "staging_dataset_id" {
+  description = "BigQuery staging dataset ID"
+  type        = string
+}
+
 variable "dataset_location" {
   description = "BigQuery dataset location"
   type        = string
