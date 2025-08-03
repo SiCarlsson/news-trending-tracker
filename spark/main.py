@@ -15,11 +15,11 @@ spark = (
     SparkSession.builder.appName("NewsStreamProcessor")
     .config(
         "spark.jars.packages",
-        "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3,com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.32.2",
+        "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3,com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.36.1",
     )
     .config(
         "spark.hadoop.google.cloud.auth.service.account.json.keyfile",
-        "../credentials/backend-bigquery-service-account.json",
+        "/Users/scarlsson/Programmering/Current projects/news-trending-tracker/credentials/backend-bigquery-service-account.json",
     )
     .config("spark.hadoop.google.cloud.auth.service.account.enable", "true")
     .config("spark.hadoop.google.cloud.auth.type", "SERVICE_ACCOUNT_JSON_KEYFILE")
@@ -27,31 +27,59 @@ spark = (
 )
 
 
-def create_sample_word_data():
-    """Create sample word data that matches the BigQuery schema"""
-    word_data = [
-        ("word_001", "politik"),
-        ("word_002", "ekonomi"),
-        ("word_003", "sverige"),
-        ("word_004", "köper"),
-        ("word_005", "säljer"),
-    ]
+def read_from_kafka(topic):
+    """Read data from Kafka topic and return DataFrame"""
+    df = (
+        spark.readStream.format("kafka")
+        .option("kafka.bootstrap.servers", "localhost:9092")
+        .option("subscribe", topic)
+        .load()
+    )
 
-    word_df = spark.createDataFrame(word_data, word_schema)
-    return word_df
+    parsed_df = df.select(
+        from_json(col("value").cast("string"), word_schema).alias("data")
+    ).select("data.*")
+
+    return parsed_df
 
 
 def write_to_bigquery(df, table_name):
-    """Write DataFrame to BigQuery table"""
-    df.write.format("bigquery").option(
-        "table", f"news-trending-tracker.scraper_data.{table_name}"
-    ).option("writeMethod", "direct").mode("append").save()
+    """Write streaming DataFrame to BigQuery using foreachBatch"""
+
+    def write_batch_to_bq(batch_df, batch_id):
+        """Write each batch to BigQuery"""
+        if batch_df.count() > 0:
+            print(
+                f"Writing batch {batch_id} with {batch_df.count()} records to BigQuery..."
+            )
+            batch_df.write.format("bigquery").option(
+                "table", f"news-trending-tracker.scraper_data.{table_name}"
+            ).option("writeMethod", "direct").mode("append").save()
+            print(f"Batch {batch_id} written successfully!")
+
+    query = (
+        df.writeStream.foreachBatch(write_batch_to_bq)
+        .option("checkpointLocation", f"/tmp/checkpoint/{table_name}")
+        .outputMode("append")
+        .start()
+    )
+    return query
 
 
 if __name__ == "__main__":
-    word_df = create_sample_word_data()
-    print("Sample word data created:")
-    word_df.show()
-    print("Writing sample word data to BigQuery...")
-    write_to_bigquery(word_df, "words")
-    print("Sample word data written to BigQuery successfully.")
+    print("\nStarting Kafka -> Spark -> BigQuery streaming...")
+
+    word_df = read_from_kafka("news-words")
+    print("Setting up streaming query to write word data to BigQuery...")
+
+    query = write_to_bigquery(word_df, "words")
+
+    print("\nStreaming query started. Writing word data to BigQuery...")
+    print(f"Query ID: {query.id}\n")
+
+    try:
+        query.awaitTermination()
+    except KeyboardInterrupt:
+        print("Stopping streaming query...")
+        query.stop()
+        print("Streaming query stopped.")
