@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
+from google.cloud import bigquery
 
 topics = ["news-articles", "news-occurrences", "news-words", "news-websites"]
 
@@ -44,23 +45,47 @@ def read_from_kafka(topic):
 
 
 def write_to_bigquery(df, table_name):
-    """Write streaming DataFrame to BigQuery using foreachBatch"""
+    """Write streaming DataFrame to BigQuery"""
 
-    def write_batch_to_bq(batch_df, batch_id):
-        """Write each batch to BigQuery"""
+    bq_client = bigquery.Client.from_service_account_json(
+        "../credentials/backend-bigquery-service-account.json"
+    )
+
+    def write_batch(batch_df, batch_id):
+        """Write each batch to BigQuery using MERGE"""
         if batch_df.count() > 0:
             print(
                 f"Writing batch {batch_id} with {batch_df.count()} records to BigQuery..."
             )
-            batch_df.write.format("bigquery").option(
-                "table", f"news-trending-tracker.scraper_data.{table_name}"
-            ).option("writeMethod", "direct").mode("append").save()
-            print(f"Batch {batch_id} written successfully!")
+
+            deduplicated_df = batch_df.dropDuplicates(["word_id"])
+
+            staging_table = f"news-trending-tracker.scraper_data.staging_{table_name}"
+
+            deduplicated_df.write.format("bigquery").option(
+                "table", staging_table
+            ).option("writeMethod", "direct").option(
+                "createDisposition", "CREATE_IF_NEEDED"
+            ).mode("overwrite").save()
+
+            merge_sql = f"""
+            MERGE `news-trending-tracker.scraper_data.{table_name}` T
+            USING `{staging_table}` S
+            ON T.word_id = S.word_id
+            WHEN NOT MATCHED THEN
+              INSERT (word_id, word_text) VALUES (S.word_id, S.word_text)
+            """
+
+            job = bq_client.query(merge_sql)
+            job.result()
+
+            print(f"Batch {batch_id} merged successfully!")
 
     query = (
-        df.writeStream.foreachBatch(write_batch_to_bq)
+        df.writeStream.foreachBatch(write_batch)
         .option("checkpointLocation", f"/tmp/checkpoint/{table_name}")
         .outputMode("append")
+        .trigger(processingTime='60 seconds')
         .start()
     )
     return query
@@ -77,9 +102,4 @@ if __name__ == "__main__":
     print("\nStreaming query started. Writing word data to BigQuery...")
     print(f"Query ID: {query.id}\n")
 
-    try:
-        query.awaitTermination()
-    except KeyboardInterrupt:
-        print("Stopping streaming query...")
-        query.stop()
-        print("Streaming query stopped.")
+    query.awaitTermination()
