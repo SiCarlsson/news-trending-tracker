@@ -86,7 +86,7 @@ services:
     restart: unless-stopped
 
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.3
     container_name: spark-master
     environment:
       - SPARK_MODE=master
@@ -99,7 +99,7 @@ services:
     restart: unless-stopped
 
   spark-worker:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.3
     container_name: spark-worker
     environment:
       - SPARK_MODE=worker
