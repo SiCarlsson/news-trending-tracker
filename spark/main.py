@@ -4,8 +4,6 @@ Module contains the NewsStreamProcessor class that orchestrates the entire
 streaming pipeline from Kafka to BigQuery through Spark.
 """
 
-import signal
-import sys
 from schemas import topic_config
 from spark_factory import SparkSessionFactory
 from kafka_streaming_service import KafkaStreamingService
@@ -24,12 +22,6 @@ class NewsStreamProcessor:
         self.spark = None
         self.kafka_streaming_service = None
         self.queries = []
-        self._setup_signal_handlers()
-
-    def _setup_signal_handlers(self):
-        """Setup signal handlers for graceful shutdown."""
-        signal.signal(signal.SIGTERM, self._signal_handler)
-        signal.signal(signal.SIGINT, self._signal_handler)
 
     def _signal_handler(self, signum, frame):
         """
