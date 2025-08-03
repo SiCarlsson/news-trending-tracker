@@ -1,3 +1,5 @@
+.env
+
 # Spark artifacts and temporary files
 artifacts/
 

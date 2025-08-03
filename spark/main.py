@@ -1,170 +1,108 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col
-from pyspark.sql.types import StructType, StructField, StringType, TimestampType
-from google.cloud import bigquery
+"""Main entry point for the Spark streaming application.
 
-topics = ["news-articles", "news-occurrences", "news-words", "news-websites"]
+Module contains the NewsStreamProcessor class that orchestrates the entire
+streaming pipeline from Kafka to BigQuery through Spark.
+"""
 
-website_schema = StructType(
-    [
-        StructField("website_id", StringType(), False),
-        StructField("website_name", StringType(), False),
-        StructField("website_url", StringType(), False),
-    ]
-)
-
-article_schema = StructType(
-    [
-        StructField("article_id", StringType(), False),
-        StructField("website_id", StringType(), False),
-        StructField("article_title", StringType(), False),
-        StructField("article_url", StringType(), False),
-    ]
-)
-
-word_schema = StructType(
-    [
-        StructField("word_id", StringType(), False),
-        StructField("word_text", StringType(), False),
-    ]
-)
-
-occurrence_schema = StructType(
-    [
-        StructField("occurrence_id", StringType(), False),
-        StructField("word_id", StringType(), False),
-        StructField("website_id", StringType(), False),
-        StructField("article_id", StringType(), False),
-        StructField("timestamp", TimestampType(), False),
-    ]
-)
-
-topic_config = {
-    "news-websites": {
-        "schema": website_schema,
-        "table": "websites",
-        "key": "website_id",
-    },
-    "news-articles": {
-        "schema": article_schema,
-        "table": "articles",
-        "key": "article_id",
-    },
-    "news-words": {"schema": word_schema, "table": "words", "key": "word_id"},
-    "news-occurrences": {
-        "schema": occurrence_schema,
-        "table": "occurrences",
-        "key": "occurrence_id",
-    },
-}
-
-spark = (
-    SparkSession.builder.appName("NewsStreamProcessor")
-    # .master("spark://localhost:7077")
-    .config(
-        "spark.jars.packages",
-        "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3,com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.36.1",
-    )
-    .config(
-        "spark.hadoop.google.cloud.auth.service.account.json.keyfile",
-        "/Users/scarlsson/Programmering/Current projects/news-trending-tracker/credentials/backend-bigquery-service-account.json",
-    )
-    .config("spark.hadoop.google.cloud.auth.service.account.enable", "true")
-    .config("spark.hadoop.google.cloud.auth.type", "SERVICE_ACCOUNT_JSON_KEYFILE")
-    .getOrCreate()
-)
+import signal
+import sys
+from schemas import topic_config
+from spark_factory import SparkSessionFactory
+from kafka_streaming_service import KafkaStreamingService
 
 
-def read_from_kafka(topic, schema):
-    """Read data from Kafka topic and return DataFrame"""
-    df = (
-        spark.readStream.format("kafka")
-        .option("kafka.bootstrap.servers", "localhost:9092")
-        .option("subscribe", topic)
-        .option("failOnDataLoss", "false")
-        .option("startingOffsets", "latest")
-        .load()
-    )
+class NewsStreamProcessor:
+    """
+    Main processor for news streaming application.
 
-    parsed_df = df.select(
-        from_json(col("value").cast("string"), schema).alias("data")
-    ).select("data.*")
+    Manages the complete lifecycle of the Kafka to BigQuery streaming pipeline,
+    including Spark session management and streaming query orchestration.
+    """
 
-    return parsed_df
+    def __init__(self):
+        """Initialize the NewsStreamProcessor with empty state."""
+        self.spark = None
+        self.kafka_streaming_service = None
+        self.queries = []
+        self._setup_signal_handlers()
 
+    def _setup_signal_handlers(self):
+        """Setup signal handlers for graceful shutdown."""
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
 
-def write_to_bigquery(df, table_name, key_field):
-    """Write streaming DataFrame to BigQuery"""
+    def _signal_handler(self, signum, frame):
+        """
+        Handle shutdown signals gracefully.
 
-    bq_client = bigquery.Client.from_service_account_json(
-        "../credentials/backend-bigquery-service-account.json"
-    )
+        Args:
+            signum: Signal number received.
+            frame: Current stack frame.
+        """
+        print(f"\nReceived signal {signum}, shutting down gracefully...")
+        self.stop()
+        sys.exit(0)
 
-    def write_batch(batch_df, batch_id):
-        """Write each batch to BigQuery using MERGE"""
-        if batch_df.count() > 0:
-            print(
-                f"Writing batch {batch_id} with {batch_df.count()} records to {table_name} table..."
-            )
+    def start(self):
+        """
+        Start the streaming application.
 
-            deduplicated_df = batch_df.dropDuplicates([key_field])
+        Creates Spark session, initializes streaming service, sets up all
+        topic processors, and begins streaming data from Kafka to BigQuery.
 
-            staging_table = f"news-trending-tracker.scraper_data.staging_{table_name}"
+        Raises:
+            Exception: If there's an error during startup.
+        """
+        try:
+            self.spark = SparkSessionFactory.create_session()
+            self.kafka_streaming_service = KafkaStreamingService(self.spark)
 
-            deduplicated_df.write.format("bigquery").option(
-                "table", staging_table
-            ).option("writeMethod", "direct").option(
-                "createDisposition", "CREATE_IF_NEEDED"
-            ).mode(
-                "overwrite"
-            ).save()
+            print("\nStarting Kafka -> Spark -> BigQuery streaming for all topics...")
 
-            # Build dynamic MERGE SQL based on table columns
-            columns = deduplicated_df.columns
-            insert_columns = ", ".join(columns)
-            insert_values = ", ".join([f"S.{col}" for col in columns])
+            for topic, config in topic_config.items():
+                query = self.kafka_streaming_service.process_topic(topic, config)
+                self.queries.append(query)
 
-            merge_sql = f"""
-            MERGE `news-trending-tracker.scraper_data.{table_name}` T
-            USING `{staging_table}` S
-            ON T.{key_field} = S.{key_field}
-            WHEN NOT MATCHED THEN
-              INSERT ({insert_columns}) VALUES ({insert_values})
-            """
+            print(f"\nAll {len(self.queries)} streaming queries started successfully!")
+            print("Topics being processed:", list(topic_config.keys()))
 
-            job = bq_client.query(merge_sql)
-            job.result()
+            self._await_termination()
 
-            print(f"Batch {batch_id} merged successfully into {table_name}!")
+        except Exception as e:
+            print(f"Error starting streaming application: {e}")
+            self.stop()
+            raise
 
-    query = (
-        df.writeStream.foreachBatch(write_batch)
-        .option("checkpointLocation", f"/tmp/spark_checkpoint/{table_name}")
-        .outputMode("append")
-        .trigger(processingTime="10 seconds")
-        .start()
-    )
-    return query
+    def _await_termination(self):
+        """
+        Wait for all streaming queries to terminate.
+
+        Blocks until all streaming queries complete. Signal handlers
+        will manage graceful shutdown.
+        """
+        for query in self.queries:
+            query.awaitTermination()
+
+    def stop(self):
+        """
+        Stop all streaming queries and Spark session.
+
+        Gracefully shuts down all active streaming queries and the Spark session.
+        Ensures proper cleanup of resources.
+        """
+
+        print("Stopping streaming queries...")
+
+        for query in self.queries:
+            if query.isActive:
+                query.stop()
+
+        if self.spark:
+            self.spark.stop()
+
+        print("All streaming queries stopped.")
 
 
 if __name__ == "__main__":
-    print("\nStarting Kafka -> Spark -> BigQuery streaming for all topics...")
-
-    queries = []
-
-    for topic, config in topic_config.items():
-        print(f"Setting up streaming for topic: {topic}")
-
-        df = read_from_kafka(topic, config["schema"])
-
-        query = write_to_bigquery(df, config["table"], config["key"])
-        queries.append(query)
-
-        print(f"Streaming query started for {topic} -> {config['table']} table")
-        print(f"Query ID: {query.id}")
-
-    print(f"\nAll {len(queries)} streaming queries started successfully!")
-    print("Topics being processed:", list(topic_config.keys()))
-
-    for query in queries:
-        query.awaitTermination()
+    processor = NewsStreamProcessor()
+    processor.start()
