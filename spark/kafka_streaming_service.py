@@ -6,6 +6,7 @@ data from Kafka topics, parsing JSON messages using predefined schemas,
 and writing the processed data to BigQuery.
 """
 
+import logging
 from pyspark.sql.functions import from_json, col
 from bigquery_writer import BigQueryWriter
 from config import Config
@@ -26,6 +27,7 @@ class KafkaStreamingService:
         Args:
             spark_session: Active Spark session for streaming operations.
         """
+        self.logger = logging.getLogger(__name__)
         self.spark = spark_session
         self.config = Config()
         self.bigquery_writer = BigQueryWriter()
@@ -100,13 +102,15 @@ class KafkaStreamingService:
             StreamingQuery: Active streaming query for this topic.
         """
 
-        print(f"Setting up streaming for topic: {topic}")
+        self.logger.info(f"Setting up streaming for topic: {topic}")
 
         df = self.read_from_kafka(topic, config["schema"])
 
         query = self.create_streaming_query(df, config["table"], config["key"])
 
-        print(f"Streaming query started for {topic} -> {config['table']} table")
-        print(f"Query ID: {query.id}")
+        self.logger.info(
+            f"Streaming query started for {topic} -> {config['table']} table"
+        )
+        self.logger.debug(f"Query ID: {query.id}")
 
         return query

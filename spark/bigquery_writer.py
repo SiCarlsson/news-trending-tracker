@@ -5,6 +5,7 @@ Module to handle all BigQuery write operations including staging table
 management and MERGE operations for data deduplication.
 """
 
+import logging
 from google.cloud import bigquery
 from config import Config
 
@@ -25,6 +26,7 @@ class BigQueryWriter:
             credentials_path (str, optional): Path to service account JSON.
                 If None, uses default from the configuration file.
         """
+        self.logger = logging.getLogger(__name__)
         self.credentials_path = credentials_path or Config.BIGQUERY_CREDENTIALS_PATH
         self.client = bigquery.Client.from_service_account_json(self.credentials_path)
         self.project_id = Config.BIGQUERY_PROJECT_ID
@@ -43,10 +45,10 @@ class BigQueryWriter:
         """
 
         if batch_df.count() == 0:
-            print(f"Batch {batch_id} is empty, skipping...")
+            self.logger.info(f"Batch {batch_id} is empty, skipping...")
             return
 
-        print(
+        self.logger.info(
             f"Writing batch {batch_id} with {batch_df.count()} records to {table_name} table..."
         )
 
@@ -57,7 +59,7 @@ class BigQueryWriter:
         self._merge_staging_to_main(
             staging_table, table_name, key_field, deduplicated_df.columns
         )
-        print(f"Batch {batch_id} merged successfully into {table_name}!")
+        self.logger.info(f"Batch {batch_id} merged successfully into {table_name}!")
 
     def _write_to_staging_table(self, df, staging_table):
         """

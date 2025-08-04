@@ -6,6 +6,7 @@ settings from environment variables and .env files with sensible defaults.
 """
 
 import os
+import logging
 from pathlib import Path
 
 try:
@@ -57,6 +58,34 @@ class Config:
         "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3",
         "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.36.1",
     ]
+
+    # Logging
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FORMAT = os.getenv(
+        "LOG_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
+    @classmethod
+    def setup_logging(cls):
+        """
+        Configure logging for the application.
+
+        Sets up logging with the configured level and format.
+        Should be called once at application startup.
+        """
+        logging.basicConfig(
+            level=getattr(logging, cls.LOG_LEVEL.upper()),
+            format=cls.LOG_FORMAT,
+            handlers=[
+                logging.StreamHandler(),
+                logging.FileHandler("/tmp/spark_news_processor.log"),
+            ],
+        )
+
+        # Specific logger levels for libraries
+        logging.getLogger("py4j").setLevel(logging.WARNING)
+        logging.getLogger("pyspark").setLevel(logging.WARNING)
+        logging.getLogger("kafka").setLevel(logging.WARNING)
 
     @property
     def spark_packages_string(self):

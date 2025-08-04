@@ -4,9 +4,11 @@ Module contains the NewsStreamProcessor class that orchestrates the entire
 streaming pipeline from Kafka to BigQuery through Spark.
 """
 
+import logging
 from schemas import topic_config
 from spark_factory import SparkSessionFactory
 from kafka_streaming_service import KafkaStreamingService
+from config import Config
 
 
 class NewsStreamProcessor:
@@ -19,6 +21,7 @@ class NewsStreamProcessor:
 
     def __init__(self):
         """Initialize the NewsStreamProcessor with empty state."""
+        self.logger = logging.getLogger(__name__)
         self.spark = None
         self.kafka_streaming_service = None
         self.queries = []
@@ -37,19 +40,23 @@ class NewsStreamProcessor:
             self.spark = SparkSessionFactory.create_session()
             self.kafka_streaming_service = KafkaStreamingService(self.spark)
 
-            print("\nStarting Kafka -> Spark -> BigQuery streaming for all topics...")
+            self.logger.info(
+                "Starting Kafka -> Spark -> BigQuery streaming for all topics..."
+            )
 
             for topic, config in topic_config.items():
                 query = self.kafka_streaming_service.process_topic(topic, config)
                 self.queries.append(query)
 
-            print(f"\nAll {len(self.queries)} streaming queries started successfully!")
-            print("Topics being processed:", list(topic_config.keys()))
+            self.logger.info(
+                f"All {len(self.queries)} streaming queries started successfully!"
+            )
+            self.logger.info(f"Topics being processed: {list(topic_config.keys())}")
 
             self._await_termination()
 
         except Exception as e:
-            print(f"Error starting streaming application: {e}")
+            self.logger.error(f"Error starting streaming application: {e}")
             self.stop()
             raise
 
@@ -71,7 +78,7 @@ class NewsStreamProcessor:
         Ensures proper cleanup of resources.
         """
 
-        print("Stopping streaming queries...")
+        self.logger.info("Stopping streaming queries...")
 
         for query in self.queries:
             if query.isActive:
@@ -80,9 +87,12 @@ class NewsStreamProcessor:
         if self.spark:
             self.spark.stop()
 
-        print("All streaming queries stopped.")
+        self.logger.info("All streaming queries stopped.")
 
 
 if __name__ == "__main__":
+    # Set up logging before starting the application
+    Config.setup_logging()
+
     processor = NewsStreamProcessor()
     processor.start()
