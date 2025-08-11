@@ -1,19 +1,20 @@
-variable "bigquery_project_id" {
+variable "BIGQUERY_PROJECT_ID" {
   description = "Google Cloud project ID"
   type        = string
 }
 
-variable "bigquery_dataset_id" {
+variable "BIGQUERY_DATASET_ID" {
   description = "BigQuery dataset ID"
   type        = string
 }
 
-variable "bigquery_staging_dataset_id" {
+variable "BIGQUERY_STAGING_DATASET_ID" {
   description = "BigQuery staging dataset ID"
   type        = string
 }
 
-variable "bigquery_dataset_location" {
+variable "BIGQUERY_DATASET_LOCATION" {
   description = "BigQuery dataset location"
   type        = string
+  default     = "EU"
 }

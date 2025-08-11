@@ -1,25 +1,13 @@
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "google" {
-  credentials = file("../credentials/backend-bigquery-service-account.json")
-  project     = var.bigquery_project_id
-}
+# This file creates the BigQuery infrastructure using Terraform
 
 resource "google_bigquery_dataset" "custom_dataset" {
-  dataset_id = var.bigquery_dataset_id
-  location   = var.bigquery_dataset_location
+  dataset_id = var.BIGQUERY_DATASET_ID
+  location   = var.BIGQUERY_DATASET_LOCATION
 }
 
 resource "google_bigquery_dataset" "staging_dataset" {
-  dataset_id = var.bigquery_staging_dataset_id
-  location   = var.bigquery_dataset_location
+  dataset_id = var.BIGQUERY_STAGING_DATASET_ID
+  location   = var.BIGQUERY_DATASET_LOCATION
 }
 
 locals {
