@@ -1,4 +1,5 @@
 # Copy this file to terraform.tfvars and customize the values to have environment-specific overrides if needed
+# Expected to be run using docker-compose.yml, thus automatically fetching these variables from .env
 
 # BIGQUERY_PROJECT_ID          = "news-trending-tracker"
 # BIGQUERY_DATASET_ID          = "scraper_data" 
