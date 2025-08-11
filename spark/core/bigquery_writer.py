@@ -70,14 +70,15 @@ class BigQueryWriter:
             staging_table (str): Full staging table name.
         """
 
-        df.write.format("bigquery")\
-            .option("table", staging_table)\
-            .option("writeMethod", "direct")\
-            .option("createDisposition", "CREATE_IF_NEEDED")\
-            .option("parentProject", self.project_id)\
-            .option("credentialsFile", self.credentials_path)\
-            .mode("overwrite")\
-            .save()
+        df.write.format("bigquery").option("table", staging_table).option(
+            "writeMethod", "direct"
+        ).option("createDisposition", "CREATE_IF_NEEDED").option(
+            "parentProject", self.project_id
+        ).option(
+            "credentialsFile", self.credentials_path
+        ).mode(
+            "overwrite"
+        ).save()
 
     def _merge_staging_to_main(self, staging_table, table_name, key_field, columns):
         """

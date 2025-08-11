@@ -8,7 +8,7 @@ and writing the processed data to BigQuery.
 
 import logging
 from pyspark.sql.functions import from_json, col
-from bigquery_writer import BigQueryWriter
+from core.bigquery_writer import BigQueryWriter
 from config import Config
 
 
