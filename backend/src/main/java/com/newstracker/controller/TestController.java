@@ -2,6 +2,7 @@ package com.newstracker.controller;
 
 import com.google.cloud.bigquery.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.MediaType;
@@ -18,13 +19,19 @@ public class TestController {
   @Autowired
   private BigQuery bigQuery;
 
+  @Value("${google.cloud.project-id}")
+  private String projectId;
+
+  @Value("${bigquery.dataset.name}")
+  private String datasetName;
+
   @GetMapping("/")
   public Map<String, Object> hello() {
     Map<String, Object> response = new HashMap<>();
     response.put("message", "Hello World!");
     response.put("status", "running");
     response.put("timestamp", LocalDateTime.now());
-    response.put("port", 8083);
+    response.put("port", 8080);
     return response;
   }
 
@@ -32,7 +39,7 @@ public class TestController {
   public Map<String, Object> testBigQuery() {
     Map<String, Object> response = new HashMap<>();
     try {
-      String query = "SELECT word_text FROM `news-trending-tracker.scraper_data.words` LIMIT 10";
+      String query = String.format("SELECT word_text FROM `%s.%s.words` LIMIT 10", projectId, datasetName);
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
       TableResult result = bigQuery.query(queryConfig);
 

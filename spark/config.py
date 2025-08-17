@@ -34,11 +34,11 @@ class Config:
 
     # BigQuery Configuration
     BIGQUERY_PROJECT_ID = os.getenv(
-        "TF_VAR_bigquery_project_id", "news-trending-tracker"
+        "TF_VAR_BIGQUERY_PROJECT_ID", "news-trending-tracker"
     )
-    BIGQUERY_DATASET = os.getenv("TF_VAR_bigquery_dataset_id", "scraper_data")
+    BIGQUERY_DATASET = os.getenv("TF_VAR_BIGQUERY_DATASET_ID", "scraper_data")
     BIGQUERY_STAGING_DATASET = os.getenv(
-        "TF_VAR_bigquery_staging_dataset_id", "staging_scraper_data"
+        "TF_VAR_BIGQUERY_STAGING_DATASET_ID", "staging_scraper_data"
     )
     BIGQUERY_CREDENTIALS_PATH = os.getenv(
         "BIGQUERY_CREDENTIALS_PATH",

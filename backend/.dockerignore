@@ -1,0 +1,66 @@
+# Git
+.git
+.gitignore
+.gitattributes
+.gitkeep
+
+# Documentation
+README.md
+*.md
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.metadata/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.pid
+*.seed
+*.coverage
+.nyc_output
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts (keep only what's needed for Docker build)
+build/classes/
+build/reports/
+build/test-results/
+build/tmp/
+!build/libs/*.jar
+
+# Gradle files (keep wrapper for build)
+.gradle/
+!gradle/
+!gradlew
+!gradlew.bat
+
+# Test files
+src/test/
+
+# Development environment
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs/
+*.log
+
+# Dependencies that will be downloaded during build
+node_modules/
