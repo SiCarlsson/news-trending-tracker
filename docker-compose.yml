@@ -115,7 +115,7 @@ services:
     ports:
       - "8082:8082"
     restart: unless-stopped
-  
+
   spark-app:
     build:
       context: ./spark
@@ -131,5 +131,22 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - BIGQUERY_CREDENTIALS_PATH=/app/credentials/backend-bigquery-service-account.json
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spring-boot-backend
+    depends_on:
+      - terraform
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./credentials:/app/credentials:ro
+    env_file:
+      - ./.env
+    environment:
+      - GOOGLE_CLOUD_PROJECT=${TF_VAR_BIGQUERY_PROJECT_ID}
+      - BIGQUERY_DATASET=${TF_VAR_BIGQUERY_DATASET_ID}
     restart: unless-stopped

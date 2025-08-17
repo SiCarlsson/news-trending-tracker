@@ -21,9 +21,10 @@ ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-ENV SPARK_APP_NAME=NewsStreamProcessor \
-    SPARK_PROCESSING_INTERVAL="10 seconds" \
-    KAFKA_STARTING_OFFSETS=latest
+ENV SPARK_APP_NAME=NewsStreamProcessor
+ENV SPARK_PROCESSING_INTERVAL="10 seconds"
+ENV KAFKA_STARTING_OFFSETS=latest
+ENV BIGQUERY_CREDENTIALS_PATH=/app/credentials/backend-bigquery-service-account.json
 
 RUN groupadd -r -g 1001 spark && \
   useradd -r -g spark -u 1001 -m spark
