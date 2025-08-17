@@ -30,7 +30,6 @@ USER newsuser
 ENV GOOGLE_CLOUD_PROJECT=news-trending-tracker
 ENV BIGQUERY_DATASET=scraper_data
 ENV SPRING_PROFILES_ACTIVE=docker
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/backend-bigquery-service-account.json
 
 EXPOSE 8080
 

@@ -135,6 +135,7 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPARK_MASTER_URL=spark://spark-master:7077
+      - BIGQUERY_CREDENTIALS_PATH=/app/credentials/backend-bigquery-service-account.json
     restart: unless-stopped
 
   backend:
@@ -153,4 +154,5 @@ services:
     environment:
       - GOOGLE_CLOUD_PROJECT=${TF_VAR_BIGQUERY_PROJECT_ID}
       - BIGQUERY_DATASET=${TF_VAR_BIGQUERY_DATASET_ID}
+      - GOOGLE_CREDENTIALS_PATH=/app/credentials/backend-bigquery-service-account.json
     restart: unless-stopped
