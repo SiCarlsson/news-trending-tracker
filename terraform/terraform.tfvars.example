@@ -1,7 +1,8 @@
 # Copy this file to terraform.tfvars and customize the values to have environment-specific overrides if needed
 # Expected to be run using docker-compose.yml, thus automatically fetching these variables from .env
 
-# BIGQUERY_PROJECT_ID          = "news-trending-tracker"
-# BIGQUERY_DATASET_ID          = "scraper_data" 
-# BIGQUERY_STAGING_DATASET_ID  = "staging_scraper_data"
-# BIGQUERY_DATASET_LOCATION    = "europe-west1"
+# TF_VAR_BIGQUERY_PROJECT_ID          =news-trending-tracker
+# TF_VAR_BIGQUERY_DATASET_ID          =raw
+# TF_VAR_BIGQUERY_STAGING_DATASET_ID  =staging
+# TF_VAR_BIGQUERY_METRICS_DATASET_ID  =metrics
+# TF_VAR_BIGQUERY_DATASET_LOCATION    =europe-west1
