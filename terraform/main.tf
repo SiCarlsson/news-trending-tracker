@@ -45,16 +45,16 @@ locals {
     activity_metrics = [
       { name = "window_start", type = "TIMESTAMP", mode = "REQUIRED" },
       { name = "window_end", type = "TIMESTAMP", mode = "REQUIRED" },
-      { name = "website_id", type = "STRING", mode = "NULLABLE" },
-      { name = "articles_delta", type = "INTEGER", mode = "NULLABLE" },
-      { name = "unique_words_delta", type = "INTEGER", mode = "NULLABLE" },
-      { name = "total_word_occurrences_delta", type = "INTEGER", mode = "NULLABLE" },
-      { name = "articles_cumulative", type = "INTEGER", mode = "NULLABLE" },
-      { name = "unique_words_cumulative", type = "INTEGER", mode = "NULLABLE" },
-      { name = "total_word_occurrences_cumulative", type = "INTEGER", mode = "NULLABLE" },
-      { name = "active_websites_cumulative", type = "INTEGER", mode = "NULLABLE" },
-      { name = "avg_words_per_article", type = "FLOAT", mode = "NULLABLE" },
-      { name = "processing_timestamp", type = "TIMESTAMP", mode = "NULLABLE" }
+      { name = "website_id", type = "STRING", mode = "REQUIRED" },
+      { name = "articles_delta", type = "INTEGER", mode = "REQUIRED" },
+      { name = "unique_words_delta", type = "INTEGER", mode = "REQUIRED" },
+      { name = "total_word_occurrences_delta", type = "INTEGER", mode = "REQUIRED" },
+      { name = "articles_cumulative", type = "INTEGER", mode = "REQUIRED" },
+      { name = "unique_words_cumulative", type = "INTEGER", mode = "REQUIRED" },
+      { name = "total_word_occurrences_cumulative", type = "INTEGER", mode = "REQUIRED" },
+      { name = "active_websites_cumulative", type = "INTEGER", mode = "REQUIRED" },
+      { name = "avg_words_per_article", type = "FLOAT", mode = "REQUIRED" },
+      { name = "processing_timestamp", type = "TIMESTAMP", mode = "REQUIRED" }
     ]
   }
 }
