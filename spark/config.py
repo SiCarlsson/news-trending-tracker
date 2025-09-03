@@ -36,9 +36,11 @@ class Config:
     BIGQUERY_PROJECT_ID = os.getenv(
         "TF_VAR_BIGQUERY_PROJECT_ID", "news-trending-tracker"
     )
-    BIGQUERY_DATASET = os.getenv("TF_VAR_BIGQUERY_DATASET_ID", "scraper_data")
+    BIGQUERY_DATASET = os.getenv("TF_VAR_BIGQUERY_DATASET_ID", "raw")
     BIGQUERY_STAGING_DATASET = os.getenv(
-        "TF_VAR_BIGQUERY_STAGING_DATASET_ID", "staging_scraper_data"
+        "TF_VAR_BIGQUERY_STAGING_DATASET_ID", "staging")
+    BIGQUERY_METRICS_DATASET = os.getenv(
+        "TF_VAR_BIGQUERY_METRICS_DATASET_ID", "metrics"
     )
     BIGQUERY_CREDENTIALS_PATH = os.getenv(
         "BIGQUERY_CREDENTIALS_PATH",
@@ -52,6 +54,15 @@ class Config:
         "SPARK_CHECKPOINT_LOCATION", "/tmp/spark_checkpoint"
     )
     SPARK_PROCESSING_INTERVAL = os.getenv("SPARK_PROCESSING_INTERVAL", "60 seconds")
+
+    # Analytics Configuration
+    ANALYTICS_APP_NAME = os.getenv("ANALYTICS_APP_NAME", "NewsAnalyticsProcessor")
+    ANALYTICS_WINDOW_DURATION = os.getenv("ANALYTICS_WINDOW_DURATION", "15 minutes")
+    ANALYTICS_WATERMARK_DELAY = os.getenv("ANALYTICS_WATERMARK_DELAY", "5 minutes")
+    ANALYTICS_PROCESSING_INTERVAL = os.getenv("ANALYTICS_PROCESSING_INTERVAL", "30 seconds")
+    ANALYTICS_CHECKPOINT_LOCATION = os.getenv(
+        "ANALYTICS_CHECKPOINT_LOCATION", "/tmp/spark_analytics_checkpoint"
+    )
 
     # Spark Packages
     SPARK_PACKAGES = [
