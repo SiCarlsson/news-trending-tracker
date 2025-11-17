@@ -1,5 +1,5 @@
 # News Trending Tracker 📊  
-**⚠️ Under Development - Currently developing the data pipeline regarding Kafka and Apache Spark ⚠️**
+**⚠️ Under Development - Currently developing the final touches regarding Apache Spark ⚠️**
 
 A real-time data pipeline that scrapes news websites, extracts trending words, and visualizes trends over time.  
 
@@ -9,7 +9,7 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 - Stores data in **Google BigQuery**  
 - Provides a REST API using Java + Spring Boot  
 - Extracts and ranks trending words
-- Visualizes trends with **Looker**  
+- Visualizes trends with **custom UId**  
 
 ## 🛠️ Tech Stack  
 - **Scraping:** Python (Scrapy)  
@@ -18,7 +18,6 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 - **Infrastructure:** Terraform
 - **Backend API:** Java + Spring Boot
 - **Frontend:** React, Typescript, TailwindCSS
-- **Visualization:** Custom made UI using frontend libraries 
 
 ## 🔧 Setup  
 1. **Clone the repository**  
@@ -30,8 +29,8 @@ A real-time data pipeline that scrapes news websites, extracts trending words, a
 - Create a **Google Cloud** project and enable **BigQuery API**.  
 - Create a **Service Account** and generate a **Service Account Key** with **BigQuery Data Editor** and **BigQuery Job User** roles for the backend services.
 - Download the keys file and place it in the project directory.  
-- Update the `Terraform variables` by duplicating `./terraform/terraform.tfvars.example` and change the varaibales to suit your project.
-- BigQuery Dataset and Tables are automatically executed when deploying the program.
+- Update the `Terraform variables` by duplicating `./terraform/terraform.tfvars.example` and change the varaibales to suit your project (if wanting to override variables).
+- BigQuery Dataset and Tables are automatically created when deploying the program.
 
 ## 📚 Appendix: Database Tables
 #### Websites Table
