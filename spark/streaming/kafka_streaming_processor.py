@@ -5,7 +5,7 @@ of the Kafka to BigQuery streaming pipeline through Spark.
 """
 
 import logging
-from spark.models.kafka_schemas import topic_config
+from models.kafka_schemas import topic_config
 from core.spark_factory import SparkSessionFactory
 from streaming.kafka_streaming_service import KafkaStreamingService
 

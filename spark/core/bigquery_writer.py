@@ -69,12 +69,19 @@ class BigQueryWriter:
             df: Spark DataFrame to write.
             staging_table (str): Full staging table name.
         """
+        
+        # Split the table reference: project.dataset.table
+        parts = staging_table.split('.')
+        if len(parts) == 3:
+            table_only = parts[2]
+        else:
+            table_only = staging_table
 
-        df.write.format("bigquery").option("table", staging_table).option(
+        df.write.format("bigquery").option("table", table_only).option(
+            "dataset", self.staging_dataset
+        ).option("project", self.project_id).option(
             "writeMethod", "direct"
         ).option("createDisposition", "CREATE_IF_NEEDED").option(
-            "parentProject", self.project_id
-        ).option(
             "credentialsFile", self.credentials_path
         ).mode(
             "overwrite"

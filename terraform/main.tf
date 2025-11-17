@@ -60,25 +60,28 @@ locals {
 }
 
 resource "google_bigquery_table" "tables" {
-  for_each   = local.raw_tables_schema
-  dataset_id = google_bigquery_dataset.raw_dataset.dataset_id
-  table_id   = each.key
-  schema     = jsonencode(each.value)
+  for_each            = local.raw_tables_schema
+  dataset_id          = google_bigquery_dataset.raw_dataset.dataset_id
+  table_id            = each.key
+  schema              = jsonencode(each.value)
+  deletion_protection = false
 }
 
 resource "google_bigquery_table" "staging_tables" {
-  for_each   = local.raw_tables_schema
-  dataset_id = google_bigquery_dataset.staging_dataset.dataset_id
-  table_id   = "staging_${each.key}"
-  schema     = jsonencode(each.value)
+  for_each            = local.raw_tables_schema
+  dataset_id          = google_bigquery_dataset.staging_dataset.dataset_id
+  table_id            = "staging_${each.key}"
+  schema              = jsonencode(each.value)
+  deletion_protection = false
 }
 
 # Create activity_metrics table in metrics dataset
 resource "google_bigquery_table" "activity_metrics" {
-  for_each = local.activity_metrics_schema
-  dataset_id = google_bigquery_dataset.metrics_dataset.dataset_id
-  table_id   = each.key
-  schema = jsonencode(each.value)
+  for_each            = local.activity_metrics_schema
+  dataset_id          = google_bigquery_dataset.metrics_dataset.dataset_id
+  table_id            = each.key
+  schema              = jsonencode(each.value)
+  deletion_protection = false
 
   time_partitioning {
     type  = "DAY"

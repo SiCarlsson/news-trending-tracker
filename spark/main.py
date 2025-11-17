@@ -5,7 +5,7 @@ and starting the news streaming processor.
 """
 
 from config import Config
-from spark.streaming.kafka_streaming_processor import KafkaStreamingProcessor
+from streaming.kafka_streaming_processor import KafkaStreamingProcessor
 
 
 def main():
