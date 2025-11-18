@@ -16,10 +16,10 @@ variable "BIGQUERY_STAGING_DATASET_ID" {
   default     = "staging"
 }
 
-variable "BIGQUERY_METRICS_DATASET_ID" {
-  description = "BigQuery metrics dataset ID"
+variable "BIGQUERY_AGGREGATION_DATASET_ID" {
+  description = "BigQuery aggregation dataset ID"
   type        = string
-  default     = "metrics"
+  default     = "aggregation"
 }
 
 variable "BIGQUERY_DATASET_LOCATION" {

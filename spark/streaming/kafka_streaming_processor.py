@@ -44,8 +44,15 @@ class KafkaStreamingProcessor:
             )
 
             for topic, config in topic_config.items():
-                query = self.kafka_streaming_service.process_topic(topic, config)
-                self.queries.append(query)
+                # Use aggregation for occurrences topic, regular processing for others
+                if topic == "news-occurrences":
+                    queries = self.kafka_streaming_service.process_topic_with_aggregation(
+                        topic, config
+                    )
+                    self.queries.extend(queries)
+                else:
+                    query = self.kafka_streaming_service.process_topic(topic, config)
+                    self.queries.append(query)
 
             self.logger.info(
                 f"All {len(self.queries)} streaming queries started successfully!"

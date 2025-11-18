@@ -32,6 +32,7 @@ class BigQueryWriter:
         self.project_id = Config.BIGQUERY_PROJECT_ID
         self.dataset = Config.BIGQUERY_DATASET
         self.staging_dataset = Config.BIGQUERY_STAGING_DATASET
+        self.aggregation_dataset = Config.BIGQUERY_AGGREGATION_DATASET
 
     def write_batch_to_bigquery(self, batch_df, batch_id, table_name, key_field):
         """
@@ -69,9 +70,9 @@ class BigQueryWriter:
             df: Spark DataFrame to write.
             staging_table (str): Full staging table name.
         """
-        
+
         # Split the table reference: project.dataset.table
-        parts = staging_table.split('.')
+        parts = staging_table.split(".")
         if len(parts) == 3:
             table_only = parts[2]
         else:
@@ -79,9 +80,9 @@ class BigQueryWriter:
 
         df.write.format("bigquery").option("table", table_only).option(
             "dataset", self.staging_dataset
-        ).option("project", self.project_id).option(
-            "writeMethod", "direct"
-        ).option("createDisposition", "CREATE_IF_NEEDED").option(
+        ).option("project", self.project_id).option("writeMethod", "direct").option(
+            "createDisposition", "CREATE_IF_NEEDED"
+        ).option(
             "credentialsFile", self.credentials_path
         ).mode(
             "overwrite"
@@ -110,4 +111,63 @@ class BigQueryWriter:
         """
 
         job = self.client.query(merge_sql)
+        job.result()
+
+    def write_aggregation_to_bigquery(self, batch_df, batch_id, table_name):
+        """
+        Write 10-minute windowed aggregations to BigQuery aggregation dataset.
+
+        Windowed aggregations (e.g., word_trends_10min).
+        
+        Uses staging approach similar to raw data to avoid Kryo serialization issues.
+        Since windows are unique, we use INSERT instead of MERGE.
+
+        Args:
+            batch_df: Spark DataFrame with windowed aggregations (window_start, window_end, etc).
+            batch_id: Unique identifier for this batch.
+            table_name (str): Target table name in aggregation dataset (e.g., 'word_trends_10min').
+        """
+        if batch_df.count() == 0:
+            self.logger.info(
+                f"Aggregation batch {batch_id} is empty for {table_name}, skipping..."
+            )
+            return
+
+        self.logger.info(
+            f"Writing aggregation batch {batch_id} with {batch_df.count()} "
+            f"records to {table_name}..."
+        )
+
+        staging_table = f"{self.project_id}.{self.staging_dataset}.staging_{table_name}"
+
+        # Write to staging using same method as raw data
+        self._write_to_staging_table(batch_df, staging_table)
+
+
+        self._insert_from_staging(staging_table, table_name, batch_df.columns)
+
+        self.logger.info(
+            f"Aggregation batch {batch_id} written successfully to {table_name}!"
+        )
+
+    def _insert_from_staging(self, staging_table, table_name, columns):
+        """
+        Insert data from staging table into aggregation table.
+
+        Args:
+            staging_table (str): Full staging table name.
+            table_name (str): Target table name in aggregation dataset.
+            columns (list): List of column names.
+        """
+        insert_columns = ", ".join(columns)
+        insert_values = ", ".join([f"S.{col}" for col in columns])
+
+        insert_sql = f"""
+        INSERT INTO `{self.project_id}.{self.aggregation_dataset}.{table_name}`
+        ({insert_columns})
+        SELECT {insert_values}
+        FROM `{staging_table}` S
+        """
+
+        job = self.client.query(insert_sql)
         job.result()

@@ -8,9 +8,9 @@ output "staging_dataset_id" {
   value       = google_bigquery_dataset.staging_dataset.dataset_id
 }
 
-output "metrics_dataset_id" {
-  description = "BigQuery metrics dataset ID"
-  value       = google_bigquery_dataset.metrics_dataset.dataset_id
+output "aggregation_dataset_id" {
+  description = "BigQuery aggregation dataset ID"
+  value       = google_bigquery_dataset.aggregation_dataset.dataset_id
 }
 
 output "raw_tables_created" {
@@ -18,7 +18,7 @@ output "raw_tables_created" {
   value       = keys(local.raw_tables_schema)
 }
 
-output "metrics_tables_created" {
-  description = "List of metrics tables created"
-  value       = keys(local.activity_metrics_schema)
+output "aggregation_tables_created" {
+  description = "List of aggregation tables created"
+  value       = [google_bigquery_table.word_trends_10min.table_id]
 }

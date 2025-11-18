@@ -10,6 +10,7 @@ import logging
 from pyspark.sql.functions import from_json, col
 from core.bigquery_writer import BigQueryWriter
 from config import Config
+from streaming.windowed_aggregations import create_10min_word_aggregates
 
 
 class KafkaStreamingService:
@@ -112,5 +113,74 @@ class KafkaStreamingService:
             f"Streaming query started for {topic} -> {config['table']} table"
         )
         self.logger.debug(f"Query ID: {query.id}")
+
+        return query
+
+    def process_topic_with_aggregation(self, topic, config):
+        """
+        Process a Kafka topic with both raw and windowed aggregation.
+
+        Creates two streaming queries:
+        1. Raw data written to main table
+        2. 15-minute windowed aggregations written to separate tables
+
+        Args:
+            topic (str): Kafka topic name to process.
+            config (dict): Topic configuration containing schema, table, and key info.
+
+        Returns:
+            list[StreamingQuery]: List of active streaming queries (raw + aggregations).
+        """
+        self.logger.info(f"Setting up streaming with aggregation for topic: {topic}")
+
+        df = self.read_from_kafka(topic, config["schema"])
+        queries = []
+
+        # Standard processing
+        raw_query = self.create_streaming_query(df, config["table"], config["key"])
+        queries.append(raw_query)
+        self.logger.info(f"Raw data query started: {topic} -> {config['table']}")
+
+        # Windowed aggregations
+        if topic == "news-occurrences":
+            word_agg_df = create_10min_word_aggregates(df)
+            word_agg_query = self.create_aggregation_query(
+                word_agg_df, "word_trends_10min"
+            )
+            queries.append(word_agg_query)
+            self.logger.info(
+                "10-min word aggregation query started -> word_trends_10min"
+            )
+
+        return queries
+
+    def create_aggregation_query(self, df, table_name):
+        """
+        Create a streaming query for aggregated data that writes to BigQuery.
+
+        Args:
+            df (DataFrame): Aggregated streaming DataFrame.
+            table_name (str): Target BigQuery table name in metrics dataset.
+
+        Returns:
+            StreamingQuery: Active streaming query writing aggregated data.
+        """
+
+        def write_aggregation_batch(batch_df, batch_id):
+            if batch_df.count() > 0:
+                self.bigquery_writer.write_aggregation_to_bigquery(
+                    batch_df, batch_id, table_name
+                )
+
+        query = (
+            df.writeStream.foreachBatch(write_aggregation_batch)
+            .option(
+                "checkpointLocation",
+                f"{self.config.ANALYTICS_CHECKPOINT_LOCATION}/{table_name}",
+            )
+            .outputMode("update")
+            .trigger(processingTime=self.config.ANALYTICS_PROCESSING_INTERVAL)
+            .start()
+        )
 
         return query
